@@ -1,13 +1,13 @@
-= hawkular-bus
+= hawkular-command-gateway
 :source-language: java
 
 ifdef::env-github[]
-[link=https://travis-ci.org/hawkular/hawkular-bus]
-image::https://travis-ci.org/hawkular/hawkular-bus.svg?branch=master[Build Status,70,18]
+[link=https://travis-ci.org/hawkular/hawkular-command-gateway]
+image::https://travis-ci.org/hawkular/hawkular-command-gateway.svg?branch=master[Build Status,70,18]
 endif::[]
 
 Hawkular messaging framework used for communicating between Hawkular components.
 
 == Issue reporting
 
-Issues can be reported in the "Bus" component of the https://issues.jboss.org/browse/HAWKULAR[Hawkular Jira project]
+Issues can be reported in the "Command Gateway" component of the https://issues.jboss.org/browse/HAWKULAR[Hawkular Jira project]
