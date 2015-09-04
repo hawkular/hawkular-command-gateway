@@ -32,11 +32,35 @@
   <packaging>pom</packaging>
 
   <name>Hawkular Command Gateway Parent</name>
+  <url>http://github.com/hawkular</url>
+  <inceptionYear>2015</inceptionYear>
+  <organization>
+    <name>Red Hat</name>
+    <url>http://www.redhat.com/</url>
+  </organization>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
 
   <modules>
     <module>hawkular-command-gateway-api</module>
     <module>hawkular-command-gateway-war</module>
   </modules>
+
+  <scm>
+    <connection>scm:git:git@github.com:hawkular/hawkular-command-gateway.git</connection>
+    <developerConnection>scm:git:git@github.com:hawkular/hawkular-command-gateway.git</developerConnection>
+    <url>https://github.com/hawkular/hawkular-command-gateway</url>
+    <tag>HEAD</tag>
+  </scm>
+  <issueManagement>
+    <system>jira</system>
+    <url>https://issues.jboss.org/browse/HAWKULAR</url>
+  </issueManagement>
 
   <properties>
 
