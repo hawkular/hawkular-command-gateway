@@ -27,8 +27,9 @@
   </parent>
 
   <artifactId>hawkular-command-gateway-war</artifactId>
-  <name>Hawkular Command Gateway Server WAR</name>
   <packaging>war</packaging>
+
+  <name>Hawkular Command Gateway Server WAR</name>
 
   <dependencies>
     <dependency>

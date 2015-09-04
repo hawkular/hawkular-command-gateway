@@ -26,11 +26,17 @@
     <version>19</version>
   </parent>
 
-  <artifactId>hawkular-command-gateway</artifactId>
   <groupId>org.hawkular.cmdgw</groupId>
+  <artifactId>hawkular-command-gateway</artifactId>
   <version>0.5.1.Final-SNAPSHOT</version>
-  <name>Hawkular Command Gateway Parent</name>
   <packaging>pom</packaging>
+
+  <name>Hawkular Command Gateway Parent</name>
+
+  <modules>
+    <module>hawkular-command-gateway-api</module>
+    <module>hawkular-command-gateway-war</module>
+  </modules>
 
   <properties>
 
@@ -43,11 +49,6 @@
     <plugin.version.org.jsonschema2pojo>0.4.14</plugin.version.org.jsonschema2pojo>
 
   </properties>
-
-  <modules>
-    <module>hawkular-command-gateway-api</module>
-    <module>hawkular-command-gateway-war</module>
-  </modules>
 
   <dependencyManagement>
     <dependencies>

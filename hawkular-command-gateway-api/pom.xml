@@ -27,6 +27,7 @@
   </parent>
 
   <artifactId>hawkular-command-gateway-api</artifactId>
+
   <name>Hawkular Command Gateway JSON API</name>
 
   <dependencies>
@@ -82,5 +83,4 @@
       </plugin>
     </plugins>
   </build>
-
 </project>
