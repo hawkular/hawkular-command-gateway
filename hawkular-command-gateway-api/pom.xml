@@ -21,13 +21,13 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.hawkular.bus</groupId>
-    <artifactId>hawkular-feed-comm-parent</artifactId>
+    <groupId>org.hawkular.cmdgw</groupId>
+    <artifactId>hawkular-command-gateway</artifactId>
     <version>0.5.1.Final-SNAPSHOT</version>
   </parent>
 
-  <artifactId>hawkular-feed-comm-api</artifactId>
-  <name>Hawkular Bus: Feed Communications JSON API</name>
+  <artifactId>hawkular-command-gateway-api</artifactId>
+  <name>Hawkular Command Gateway JSON API</name>
 
   <dependencies>
     <dependency>

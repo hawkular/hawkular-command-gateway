@@ -21,13 +21,13 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.hawkular.bus</groupId>
-    <artifactId>hawkular-feed-comm-parent</artifactId>
+    <groupId>org.hawkular.cmdgw</groupId>
+    <artifactId>hawkular-command-gateway</artifactId>
     <version>0.5.1.Final-SNAPSHOT</version>
   </parent>
 
-  <artifactId>hawkular-feed-comm-war</artifactId>
-  <name>Hawkular Bus: Feed Communications Server WAR</name>
+  <artifactId>hawkular-command-gateway-war</artifactId>
+  <name>Hawkular Command Gateway Server WAR</name>
   <packaging>war</packaging>
 
   <dependencies>
@@ -59,15 +59,14 @@
     </dependency>
 
     <dependency>
-      <groupId>org.hawkular.bus</groupId>
-      <artifactId>hawkular-feed-comm-api</artifactId>
-      <version>${project.version}</version>
+      <groupId>org.hawkular.cmdgw</groupId>
+      <artifactId>hawkular-command-gateway-api</artifactId>
+      <version>0.5.1.Final-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.hawkular.bus</groupId>
       <artifactId>hawkular-bus-common</artifactId>
-      <version>${project.version}</version>
       <scope>provided</scope> <!-- the nest provides this -->
     </dependency>
 

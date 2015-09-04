@@ -26,26 +26,64 @@
     <version>19</version>
   </parent>
 
-  <artifactId>hawkular-feed-comm-parent</artifactId>
-  <name>Hawkular Bus: Feed Communications Parent</name>
+  <artifactId>hawkular-command-gateway</artifactId>
+  <groupId>org.hawkular.cmdgw</groupId>
+  <version>0.5.1.Final-SNAPSHOT</version>
+  <name>Hawkular Command Gateway Parent</name>
   <packaging>pom</packaging>
 
   <properties>
+
+    <!-- Dependency versions in alphabetic order -->
+    <version.org.hawkular.accounts>1.0.11.Final</version.org.hawkular.accounts>
+    <version.org.hawkular.bus>0.5.1.Final-SNAPSHOT</version.org.hawkular.bus>
+    <version.org.hawkular.inventory>0.3.3.Final</version.org.hawkular.inventory>
+
+    <!-- Plugin versions in alphabetic order -->
     <plugin.version.org.jsonschema2pojo>0.4.14</plugin.version.org.jsonschema2pojo>
+
   </properties>
 
   <modules>
-    <module>feed-comm-api</module>
-    <module>feed-comm-war</module>
+    <module>hawkular-command-gateway-api</module>
+    <module>hawkular-command-gateway-war</module>
   </modules>
 
   <dependencyManagement>
     <dependencies>
+
       <dependency>
         <groupId>javax</groupId>
         <artifactId>javaee-api</artifactId>
         <version>7.0</version>
       </dependency>
+
+      <dependency>
+        <groupId>org.hawkular.accounts</groupId>
+        <artifactId>hawkular-accounts-websocket-api</artifactId>
+        <version>${version.org.hawkular.accounts}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.hawkular.bus</groupId>
+        <artifactId>hawkular-bus-common</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.hawkular.inventory</groupId>
+        <artifactId>hawkular-inventory-json-helper</artifactId>
+        <version>${version.org.hawkular.inventory}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.wildfly.bom</groupId>
+        <artifactId>jboss-javaee-7.0-wildfly</artifactId>
+        <version>${version.org.wildfly}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
     </dependencies>
   </dependencyManagement>
 </project>
