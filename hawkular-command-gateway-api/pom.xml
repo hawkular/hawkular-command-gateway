@@ -49,7 +49,6 @@
     <dependency>
       <groupId>org.hawkular.bus</groupId>
       <artifactId>hawkular-bus-common</artifactId>
-      <version>${project.version}</version>
     </dependency>
 
     <dependency>

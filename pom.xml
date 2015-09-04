@@ -66,7 +66,7 @@
 
     <!-- Dependency versions in alphabetic order -->
     <version.org.hawkular.accounts>1.0.11.Final</version.org.hawkular.accounts>
-    <version.org.hawkular.bus>0.5.1.Final-SNAPSHOT</version.org.hawkular.bus>
+    <version.org.hawkular.bus>0.5.0.Final</version.org.hawkular.bus>
     <version.org.hawkular.inventory>0.3.3.Final</version.org.hawkular.inventory>
 
     <!-- Plugin versions in alphabetic order -->
@@ -92,7 +92,7 @@
       <dependency>
         <groupId>org.hawkular.bus</groupId>
         <artifactId>hawkular-bus-common</artifactId>
-        <version>${project.version}</version>
+        <version>${version.org.hawkular.bus}</version>
       </dependency>
 
       <dependency>
