@@ -51,7 +51,7 @@ jQuery(function($){
     document.getElementById('file').addEventListener('change', handleFileSelect, false);
 
     var $urlcontext = $("#urlcontext");
-    var host = "ws://localhost:8080/hawkular/feed-comm/" + $urlcontext.val();
+    var host = "ws://localhost:8080/hawkular/command-gateway/" + $urlcontext.val();
 
     var socket = new WebSocket(host);
     socket.binaryType = 'arraybuffer';
