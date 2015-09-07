@@ -18,7 +18,7 @@
     "type": "object",
     "javaType": "org.hawkular.bus.common.BasicMessage"
   },
-  "javaType": "org.hawkular.feedcomm.api.AuthMessage",
+  "javaType": "org.hawkular.cmdgw.api.AuthMessage",
   "description": "Message properties that are needed for authentication.",
   "additionalProperties": false,
   "properties": {

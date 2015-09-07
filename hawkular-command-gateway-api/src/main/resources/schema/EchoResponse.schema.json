@@ -2,9 +2,9 @@
   "type": "object",
   "extends": {
     "type": "object",
-    "javaType": "org.hawkular.feedcomm.api.AuthMessage"
+    "javaType": "org.hawkular.cmdgw.api.AuthMessage"
   },
-  "javaType": "org.hawkular.feedcomm.api.EchoResponse",
+  "javaType": "org.hawkular.cmdgw.api.EchoResponse",
   "description": "An echo response where the reply should be the message from the echo request.",
   "additionalProperties": false,
   "properties": {
