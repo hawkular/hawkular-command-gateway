@@ -2,9 +2,9 @@
   "type": "object",
   "extends": {
     "type": "object",
-    "javaType": "org.hawkular.feedcomm.api.AuthMessage"
+    "javaType": "org.hawkular.cmdgw.api.AuthMessage"
   },
-  "javaType": "org.hawkular.feedcomm.api.ExecuteOperationRequest",
+  "javaType": "org.hawkular.cmdgw.api.ExecuteOperationRequest",
   "additionalProperties": false,
   "description": "A request to execute an operation.",
   "properties": {

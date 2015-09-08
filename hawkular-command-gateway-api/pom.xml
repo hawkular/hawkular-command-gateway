@@ -66,7 +66,7 @@
         <version>${plugin.version.org.jsonschema2pojo}</version>
         <configuration>
           <sourceDirectory>${basedir}/src/main/resources/schema</sourceDirectory>
-          <targetPackage>org.hawkular.feedcomm.api</targetPackage>
+          <targetPackage>org.hawkular.cmdgw.api</targetPackage>
           <annotationStyle>jackson2</annotationStyle>
           <includeToString>false</includeToString>
           <includeHashcodeAndEquals>false</includeHashcodeAndEquals>

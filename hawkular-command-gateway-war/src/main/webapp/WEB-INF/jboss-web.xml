@@ -18,6 +18,6 @@
 
 -->
 <jboss-web>
-  <context-root>/hawkular/feed-comm</context-root>
+  <context-root>/hawkular/command-gateway</context-root>
   <security-domain>keycloak</security-domain>
 </jboss-web>
