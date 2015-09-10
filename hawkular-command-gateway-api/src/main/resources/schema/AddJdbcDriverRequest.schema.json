@@ -9,7 +9,7 @@
   "additionalProperties": false,
   "properties": {
     "resourcePath": {
-      "description" : "The inventory path to the resource that is to deploy the application",
+      "description" : "The inventory path to the Application Server resource where the driver should be installed",
       "type": "string"
     },
     "driverName": {
