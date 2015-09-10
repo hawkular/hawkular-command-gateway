@@ -20,6 +20,7 @@ import org.hawkular.bus.common.Endpoint;
 import org.hawkular.bus.common.Endpoint.Type;
 import org.hawkular.cmdgw.ws.command.EchoCommand;
 import org.hawkular.cmdgw.ws.command.GenericErrorResponseCommand;
+import org.hawkular.cmdgw.ws.command.feed.AddJdbcDriverResponseCommand;
 import org.hawkular.cmdgw.ws.command.feed.DeployApplicationResponseCommand;
 import org.hawkular.cmdgw.ws.command.feed.ExecuteOperationResponseCommand;
 import org.hawkular.cmdgw.ws.command.ui.AddJdbcDriverCommand;
@@ -54,6 +55,7 @@ public interface Constants {
             .put(EchoCommand.REQUEST_CLASS.getName(), EchoCommand.class)
             .put(ExecuteOperationResponseCommand.REQUEST_CLASS.getName(), ExecuteOperationResponseCommand.class)
             .put(DeployApplicationResponseCommand.REQUEST_CLASS.getName(), DeployApplicationResponseCommand.class)
+            .put(AddJdbcDriverResponseCommand.REQUEST_CLASS.getName(), AddJdbcDriverResponseCommand.class)
             .put(GenericErrorResponseCommand.REQUEST_CLASS.getName(), GenericErrorResponseCommand.class);
 
     /**

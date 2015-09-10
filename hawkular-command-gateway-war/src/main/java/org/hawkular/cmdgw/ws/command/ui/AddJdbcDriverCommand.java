@@ -43,6 +43,7 @@ public class AddJdbcDriverCommand implements Command<AddJdbcDriverRequest, Gener
     public GenericSuccessResponse execute(AddJdbcDriverRequest request, BinaryData binaryData,
             CommandContext context) throws Exception {
 
+        MsgLogger.LOG.tracef(AddJdbcDriverCommand.class.getName() + " is about to execute the request [%s] ", request);
         // determine what feed needs to be sent the message
         CanonicalPath resourcePath = CanonicalPath.fromString(request.getResourcePath());
         String feedId = resourcePath.ids().getFeedId();
