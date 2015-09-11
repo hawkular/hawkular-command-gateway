@@ -4,8 +4,8 @@
     "type": "object",
     "javaType": "org.hawkular.cmdgw.api.AuthMessage"
   },
-  "javaType": "org.hawkular.cmdgw.api.AddJdbcDriverResponse",
-  "description": "Results of an Add Driver request.",
+  "javaType": "org.hawkular.cmdgw.api.AddDatasourceResponse",
+  "description": "Results of an Add Datasource request.",
   "additionalProperties": false,
   "properties": {
     "resourcePath": {

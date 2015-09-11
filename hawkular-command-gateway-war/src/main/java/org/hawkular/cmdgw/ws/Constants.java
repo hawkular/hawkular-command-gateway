@@ -20,9 +20,11 @@ import org.hawkular.bus.common.Endpoint;
 import org.hawkular.bus.common.Endpoint.Type;
 import org.hawkular.cmdgw.ws.command.EchoCommand;
 import org.hawkular.cmdgw.ws.command.GenericErrorResponseCommand;
+import org.hawkular.cmdgw.ws.command.feed.AddDatasourceResponseCommand;
 import org.hawkular.cmdgw.ws.command.feed.AddJdbcDriverResponseCommand;
 import org.hawkular.cmdgw.ws.command.feed.DeployApplicationResponseCommand;
 import org.hawkular.cmdgw.ws.command.feed.ExecuteOperationResponseCommand;
+import org.hawkular.cmdgw.ws.command.ui.AddDatasourceCommand;
 import org.hawkular.cmdgw.ws.command.ui.AddJdbcDriverCommand;
 import org.hawkular.cmdgw.ws.command.ui.DeployApplicationCommand;
 import org.hawkular.cmdgw.ws.command.ui.ExecuteOperationCommand;
@@ -56,6 +58,7 @@ public interface Constants {
             .put(ExecuteOperationResponseCommand.REQUEST_CLASS.getName(), ExecuteOperationResponseCommand.class)
             .put(DeployApplicationResponseCommand.REQUEST_CLASS.getName(), DeployApplicationResponseCommand.class)
             .put(AddJdbcDriverResponseCommand.REQUEST_CLASS.getName(), AddJdbcDriverResponseCommand.class)
+            .put(AddDatasourceResponseCommand.REQUEST_CLASS.getName(), AddDatasourceResponseCommand.class)
             .put(GenericErrorResponseCommand.REQUEST_CLASS.getName(), GenericErrorResponseCommand.class);
 
     /**
@@ -65,6 +68,7 @@ public interface Constants {
             .put(EchoCommand.REQUEST_CLASS.getName(), EchoCommand.class)
             .put(DeployApplicationCommand.REQUEST_CLASS.getName(), DeployApplicationCommand.class)
             .put(AddJdbcDriverCommand.REQUEST_CLASS.getName(), AddJdbcDriverCommand.class)
+            .put(AddDatasourceCommand.REQUEST_CLASS.getName(), AddDatasourceCommand.class)
             .put(ExecuteOperationCommand.REQUEST_CLASS.getName(), ExecuteOperationCommand.class)
             .put(GenericErrorResponseCommand.REQUEST_CLASS.getName(), GenericErrorResponseCommand.class);
 
@@ -72,9 +76,11 @@ public interface Constants {
     Endpoint DEST_FEED_EXECUTE_OP = new Endpoint(Type.QUEUE, "FeedExecuteOperation");
     Endpoint DEST_FEED_DEPLOY_APPLICATION = new Endpoint(Type.QUEUE, "FeedDeployApplication");
     Endpoint DEST_FEED_ADD_JDBC_DRIVER = new Endpoint(Type.QUEUE, "FeedAddJdbcDriver");
+    Endpoint DEST_FEED_ADD_DATASOURCE = new Endpoint(Type.QUEUE, "FeedAddDatasource");
 
     Endpoint DEST_UICLIENT_EXECUTE_OP_RESPONSE = new Endpoint(Type.QUEUE, "UIClientExecuteOperationResponse");
     Endpoint DEST_UICLIENT_DEPLOY_APPLICATION_RESPONSE = new Endpoint(Type.QUEUE, "UIDeployApplicationResponse");
     Endpoint DEST_UICLIENT_ADD_JDBC_DRIVER_RESPONSE = new Endpoint(Type.QUEUE, "UIAddJdbcDriverResponse");
+    Endpoint DEST_UICLIENT_ADD_DATASOURCE_RESPONSE = new Endpoint(Type.QUEUE, "UIAddDatasourceResponse");
 
 }

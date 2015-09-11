@@ -16,33 +16,27 @@
  */
 package org.hawkular.cmdgw.ws.mdb;
 
-import java.util.concurrent.ExecutorService;
-
 import javax.websocket.Session;
 
 import org.hawkular.bus.common.BasicMessageWithExtraData;
-import org.hawkular.bus.common.BinaryData;
 import org.hawkular.bus.common.consumer.BasicMessageListener;
-import org.hawkular.cmdgw.api.AddJdbcDriverRequest;
-import org.hawkular.cmdgw.api.ApiDeserializer;
+import org.hawkular.cmdgw.api.AddDatasourceRequest;
 import org.hawkular.cmdgw.ws.Constants;
 import org.hawkular.cmdgw.ws.MsgLogger;
 import org.hawkular.cmdgw.ws.WebSocketHelper;
 import org.hawkular.cmdgw.ws.server.ConnectedFeeds;
 
-public class AddJdbcDriverListener extends BasicMessageListener<AddJdbcDriverRequest> {
+public class AddDatasourceListener extends BasicMessageListener<AddDatasourceRequest> {
 
     private final ConnectedFeeds connectedFeeds;
-    private final ExecutorService threadPool;
 
-    public AddJdbcDriverListener(ConnectedFeeds connectedFeeds, ExecutorService threadPool) {
+    public AddDatasourceListener(ConnectedFeeds connectedFeeds) {
         this.connectedFeeds = connectedFeeds;
-        this.threadPool = threadPool;
     }
 
-    protected void onBasicMessage(BasicMessageWithExtraData<AddJdbcDriverRequest> request) {
+    protected void onBasicMessage(BasicMessageWithExtraData<AddDatasourceRequest> request) {
         try {
-            AddJdbcDriverRequest basicMessage = request.getBasicMessage();
+            AddDatasourceRequest basicMessage = request.getBasicMessage();
             String feedId = basicMessage.getHeaders().get(Constants.HEADER_FEEDID);
             if (feedId == null) {
                 throw new IllegalArgumentException("Missing header: " + Constants.HEADER_FEEDID);
@@ -56,13 +50,12 @@ public class AddJdbcDriverListener extends BasicMessageListener<AddJdbcDriverReq
                     basicMessage.getResourcePath());
 
             // send the request to the feed
-            BinaryData dataToSend = ApiDeserializer.toHawkularFormat(basicMessage, request.getBinaryData());
-            new WebSocketHelper().sendBinaryAsync(session, dataToSend, threadPool);
+            new WebSocketHelper().sendBasicMessageAsync(session, basicMessage);
             return;
 
         } catch (Exception e) {
             // catch all exceptions and just log the error to let us auto-ack the message anyway
-            MsgLogger.LOG.errorf(e, "Cannot process [%s]", AddJdbcDriverRequest.class.getName());
+            MsgLogger.LOG.errorf(e, "Cannot process [%s]", AddDatasourceRequest.class.getName());
         }
     }
 }
