@@ -38,6 +38,7 @@ import org.hawkular.bus.common.MessageProcessor;
 import org.hawkular.bus.common.consumer.ConsumerConnectionContext;
 import org.hawkular.cmdgw.ws.Constants;
 import org.hawkular.cmdgw.ws.MsgLogger;
+import org.hawkular.cmdgw.ws.mdb.AddDatasourceResponseListener;
 import org.hawkular.cmdgw.ws.mdb.AddJdbcDriverResponseListener;
 import org.hawkular.cmdgw.ws.mdb.DeployApplicationResponseListener;
 import org.hawkular.cmdgw.ws.mdb.ExecuteOperationResponseListener;
@@ -116,6 +117,11 @@ public class UIClientListenerGenerator {
             endpoint = Constants.DEST_UICLIENT_ADD_JDBC_DRIVER_RESPONSE;
             ccc = ccf.createConsumerConnectionContext(endpoint, null);
             messageProcessor.listen(ccc, new AddJdbcDriverResponseListener(connectedUIClients));
+            contextList.add(ccc);
+
+            endpoint = Constants.DEST_UICLIENT_ADD_DATASOURCE_RESPONSE;
+            ccc = ccf.createConsumerConnectionContext(endpoint, null);
+            messageProcessor.listen(ccc, new AddDatasourceResponseListener(connectedUIClients));
             contextList.add(ccc);
         }
 
