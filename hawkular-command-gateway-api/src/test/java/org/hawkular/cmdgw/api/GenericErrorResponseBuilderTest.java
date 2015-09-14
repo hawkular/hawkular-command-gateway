@@ -14,10 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hawkular.gmdgw.api;
+package org.hawkular.cmdgw.api;
 
-import org.hawkular.cmdgw.api.GenericErrorResponse;
-import org.hawkular.cmdgw.api.GenericErrorResponseBuilder;
 import org.junit.Assert;
 import org.junit.Test;
 

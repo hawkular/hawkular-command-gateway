@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hawkular.gmdgw.api;
+package org.hawkular.cmdgw.api;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -24,12 +24,6 @@ import java.util.Scanner;
 import org.hawkular.bus.common.BasicMessage;
 import org.hawkular.bus.common.BasicMessageWithExtraData;
 import org.hawkular.bus.common.BinaryData;
-import org.hawkular.cmdgw.api.ApiDeserializer;
-import org.hawkular.cmdgw.api.EchoRequest;
-import org.hawkular.cmdgw.api.EchoResponse;
-import org.hawkular.cmdgw.api.ExecuteOperationRequest;
-import org.hawkular.cmdgw.api.GenericErrorResponse;
-import org.hawkular.cmdgw.api.GenericSuccessResponse;
 import org.junit.Assert;
 import org.junit.Test;
 
