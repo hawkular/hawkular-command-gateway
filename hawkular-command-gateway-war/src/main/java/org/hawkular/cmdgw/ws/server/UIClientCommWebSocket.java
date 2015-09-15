@@ -238,6 +238,9 @@ public class UIClientCommWebSocket {
                 password = auth.getPassword();
                 token = auth.getToken();
                 persona = auth.getPersona();
+
+                // make sure we clear the auth message - if we forward it we don't want the creds going along with it
+                authMessage.setAuthentication(null);
             }
         }
 
