@@ -19,6 +19,7 @@ package org.hawkular.cmdgw.ws.command.ui;
 import java.util.Collections;
 import java.util.Map;
 
+import org.hawkular.bus.common.BasicMessageWithExtraData;
 import org.hawkular.bus.common.BinaryData;
 import org.hawkular.bus.common.ConnectionContextFactory;
 import org.hawkular.bus.common.Endpoint;
@@ -39,8 +40,8 @@ public class ExecuteOperationCommand implements Command<ExecuteOperationRequest,
     public static final Class<ExecuteOperationRequest> REQUEST_CLASS = ExecuteOperationRequest.class;
 
     @Override
-    public GenericSuccessResponse execute(ExecuteOperationRequest request, BinaryData binaryData,
-            CommandContext context) throws Exception {
+    public BasicMessageWithExtraData<GenericSuccessResponse> execute(ExecuteOperationRequest request,
+            BinaryData binaryData, CommandContext context) throws Exception {
 
         // determine what feed needs to be sent the message
         CanonicalPath resourcePath = CanonicalPath.fromString(request.getResourcePath());
@@ -53,7 +54,7 @@ public class ExecuteOperationCommand implements Command<ExecuteOperationRequest,
             MessageId mid = new MessageProcessor().send(pcc, request, feedIdHeader);
             GenericSuccessResponse response = new GenericSuccessResponse();
             response.setMessage("The execution request has been forwarded to feed [" + feedId + "] (id=" + mid + ")");
-            return response;
+            return new BasicMessageWithExtraData<GenericSuccessResponse>(response, null);
         }
     }
 }

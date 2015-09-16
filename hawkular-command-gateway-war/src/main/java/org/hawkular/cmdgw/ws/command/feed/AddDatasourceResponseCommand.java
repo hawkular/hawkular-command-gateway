@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.hawkular.bus.common.BasicMessage;
+import org.hawkular.bus.common.BasicMessageWithExtraData;
 import org.hawkular.bus.common.BinaryData;
 import org.hawkular.bus.common.ConnectionContextFactory;
 import org.hawkular.bus.common.Endpoint;
@@ -38,8 +39,8 @@ public class AddDatasourceResponseCommand implements Command<AddDatasourceRespon
     public static final Class<AddDatasourceResponse> REQUEST_CLASS = AddDatasourceResponse.class;
 
     @Override
-    public BasicMessage execute(AddDatasourceResponse response, BinaryData binaryData, CommandContext context)
-            throws Exception {
+    public BasicMessageWithExtraData<BasicMessage> execute(AddDatasourceResponse response, BinaryData binaryData,
+            CommandContext context) throws Exception {
 
         MsgLogger.LOG.infof("Request completed: [%s]", response);
 

@@ -17,6 +17,7 @@
 package org.hawkular.cmdgw.ws.command;
 
 import org.hawkular.bus.common.BasicMessage;
+import org.hawkular.bus.common.BasicMessageWithExtraData;
 import org.hawkular.bus.common.BinaryData;
 
 /**
@@ -33,5 +34,6 @@ public interface Command<REQ extends BasicMessage, RESP extends BasicMessage> {
      * @return the results of the command that need to be sent back to the feed - may be null
      * @throws Exception if failed to execute the operation
      */
-    RESP execute(REQ request, BinaryData binaryData, CommandContext context) throws Exception;
+    BasicMessageWithExtraData<RESP> execute(REQ request, BinaryData binaryData, CommandContext context)
+            throws Exception;
 }

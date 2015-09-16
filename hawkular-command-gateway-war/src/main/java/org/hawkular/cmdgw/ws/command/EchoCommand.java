@@ -19,6 +19,7 @@ package org.hawkular.cmdgw.ws.command;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
+import org.hawkular.bus.common.BasicMessageWithExtraData;
 import org.hawkular.bus.common.BinaryData;
 import org.hawkular.cmdgw.api.EchoRequest;
 import org.hawkular.cmdgw.api.EchoResponse;
@@ -27,7 +28,8 @@ public class EchoCommand implements Command<EchoRequest, EchoResponse> {
     public static final Class<EchoRequest> REQUEST_CLASS = EchoRequest.class;
 
     @Override
-    public EchoResponse execute(EchoRequest echoRequest, BinaryData binaryData, CommandContext context) {
+    public BasicMessageWithExtraData<EchoResponse> execute(EchoRequest echoRequest, BinaryData binaryData,
+            CommandContext context) {
         String echo = String.format("ECHO [%s]", echoRequest.getEchoMessage());
         StringBuilder extra = new StringBuilder();
 
@@ -42,6 +44,6 @@ public class EchoCommand implements Command<EchoRequest, EchoResponse> {
         // return the response
         EchoResponse echoResponse = new EchoResponse();
         echoResponse.setReply(echo + extra.toString());
-        return echoResponse;
+        return new BasicMessageWithExtraData<>(echoResponse, binaryData);
     }
 }

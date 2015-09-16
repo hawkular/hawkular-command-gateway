@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.hawkular.bus.common.BasicMessage;
+import org.hawkular.bus.common.BasicMessageWithExtraData;
 import org.hawkular.bus.common.BinaryData;
 import org.hawkular.bus.common.ConnectionContextFactory;
 import org.hawkular.bus.common.Endpoint;
@@ -38,8 +39,8 @@ public class ExecuteOperationResponseCommand implements Command<ExecuteOperation
     public static final Class<ExecuteOperationResponse> REQUEST_CLASS = ExecuteOperationResponse.class;
 
     @Override
-    public BasicMessage execute(ExecuteOperationResponse response, BinaryData binaryData, CommandContext context)
-            throws Exception {
+    public BasicMessageWithExtraData<BasicMessage> execute(ExecuteOperationResponse response, BinaryData binaryData,
+            CommandContext context) throws Exception {
 
         String resPath = response.getResourcePath();
         String opName = response.getOperationName();

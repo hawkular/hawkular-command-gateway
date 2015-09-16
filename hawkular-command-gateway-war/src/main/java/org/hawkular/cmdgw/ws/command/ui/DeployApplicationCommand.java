@@ -19,6 +19,7 @@ package org.hawkular.cmdgw.ws.command.ui;
 import java.util.Collections;
 import java.util.Map;
 
+import org.hawkular.bus.common.BasicMessageWithExtraData;
 import org.hawkular.bus.common.BinaryData;
 import org.hawkular.bus.common.ConnectionContextFactory;
 import org.hawkular.bus.common.Endpoint;
@@ -40,8 +41,8 @@ public class DeployApplicationCommand implements Command<DeployApplicationReques
     public static final Class<DeployApplicationRequest> REQUEST_CLASS = DeployApplicationRequest.class;
 
     @Override
-    public GenericSuccessResponse execute(DeployApplicationRequest request, BinaryData binaryData,
-            CommandContext context) throws Exception {
+    public BasicMessageWithExtraData<GenericSuccessResponse> execute(DeployApplicationRequest request,
+            BinaryData binaryData, CommandContext context) throws Exception {
 
         // determine what feed needs to be sent the message
         CanonicalPath resourcePath = CanonicalPath.fromString(request.getResourcePath());
@@ -55,7 +56,7 @@ public class DeployApplicationCommand implements Command<DeployApplicationReques
             MsgLogger.LOG.debugf("File upload request placed on bus. mid=[%s], request=[%s]", mid, request);
             GenericSuccessResponse response = new GenericSuccessResponse();
             response.setMessage("The execution request has been forwarded to feed [" + feedId + "] (id=" + mid + ")");
-            return response;
+            return new BasicMessageWithExtraData<>(response, null);
         }
     }
 }
