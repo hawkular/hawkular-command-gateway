@@ -43,6 +43,7 @@ import org.hawkular.cmdgw.ws.mdb.AddDatasourceListener;
 import org.hawkular.cmdgw.ws.mdb.AddJdbcDriverListener;
 import org.hawkular.cmdgw.ws.mdb.DeployApplicationListener;
 import org.hawkular.cmdgw.ws.mdb.ExecuteOperationListener;
+import org.hawkular.cmdgw.ws.mdb.ExportJdrListener;
 
 @Startup
 @Singleton
@@ -123,6 +124,11 @@ public class FeedListenerGenerator {
         endpoint = Constants.DEST_FEED_ADD_DATASOURCE;
         ccc = ccf.createConsumerConnectionContext(endpoint, messageSelector);
         messageProcessor.listen(ccc, new AddDatasourceListener(connectedFeeds));
+        contextList.add(ccc);
+
+        endpoint = Constants.DEST_FEED_EXPORT_JDR;
+        ccc = ccf.createConsumerConnectionContext(endpoint, messageSelector);
+        messageProcessor.listen(ccc, new ExportJdrListener(connectedFeeds));
         contextList.add(ccc);
 
         return;
