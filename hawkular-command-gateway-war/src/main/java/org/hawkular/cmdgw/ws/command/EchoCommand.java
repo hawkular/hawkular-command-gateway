@@ -16,6 +16,7 @@
  */
 package org.hawkular.cmdgw.ws.command;
 
+import java.io.ByteArrayInputStream;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
@@ -43,7 +44,8 @@ public class EchoCommand implements Command<EchoRequest, EchoResponse> {
 
         // return the response
         EchoResponse echoResponse = new EchoResponse();
-        echoResponse.setReply(echo + extra.toString());
-        return new BasicMessageWithExtraData<>(echoResponse, binaryData);
+        echoResponse.setReply(echo);
+        return new BasicMessageWithExtraData<>(echoResponse,
+                new BinaryData(null, new ByteArrayInputStream(extra.toString().getBytes())));
     }
 }
