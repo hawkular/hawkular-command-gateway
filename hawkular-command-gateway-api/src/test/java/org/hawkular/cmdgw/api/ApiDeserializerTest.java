@@ -69,15 +69,24 @@ public class ApiDeserializerTest {
         Assert.assertEquals("msg", echoRequest.getEchoMessage());
     }
 
-    //@Test // put this back if we revert HAWKULAR-451, remove this if we do not revert it
+    @Test
     public void testApiDeserializerError() {
         ApiDeserializer ad = new ApiDeserializer();
 
         String nameAndJson = EchoRequest.class.getName() + "={\"boo\":\"msg\"}";
         try {
             ad.deserialize(nameAndJson);
-            Assert.fail("Should not have deserialized");
-        } catch (Exception ok) {
+            Assert.fail("Should not have deserialized, RuntimeException expected.");
+        } catch (RuntimeException expected) {
+            Throwable root = expected;
+            while (root.getCause() != null) {
+                root = root.getCause();
+            }
+            Assert.assertTrue("Expected an UnrecognizedPropertyException",
+                    root.getClass().getSimpleName().equals("UnrecognizedPropertyException"));
+            final String expectedPrefix = "Unrecognized field \"boo\"";
+            Assert.assertTrue("[" + root.getMessage() + "] should start with [" + expectedPrefix + "]",
+                    root.getMessage().startsWith(expectedPrefix));
         }
     }
 
