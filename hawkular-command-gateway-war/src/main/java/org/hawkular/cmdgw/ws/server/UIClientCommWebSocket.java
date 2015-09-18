@@ -98,8 +98,6 @@ public class UIClientCommWebSocket {
     public String uiClientMessage(String nameAndJsonStr, Session session) {
         String uiClientId = getUIClientIDFromSession(session);
         MsgLogger.LOG.infoReceivedMessageFromUIClient(uiClientId, session.getId());
-        MsgLogger.LOG.debugf("Received message from UI client [%s] (session [%s]): [%s]", uiClientId, session.getId(),
-                nameAndJsonStr);
 
         String requestClassName = "?";
         BasicMessage response;
