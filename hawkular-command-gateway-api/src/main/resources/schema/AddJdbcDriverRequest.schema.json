@@ -15,6 +15,15 @@
     "driverName": {
       "type": "string"
     },
+    "driverClass": {
+      "type": "string"
+    },
+    "driverMajorVersion": {
+      "type": "integer"
+    },
+    "driverMinorVersion": {
+      "type": "integer"
+    },
     "moduleName": {
       "description": "The name of the JBoss Module to create or use, such as \"org.example.jdbc.driver\"",
       "type": "string"
