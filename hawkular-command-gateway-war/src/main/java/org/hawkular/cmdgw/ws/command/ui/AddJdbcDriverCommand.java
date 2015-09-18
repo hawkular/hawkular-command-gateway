@@ -19,6 +19,7 @@ package org.hawkular.cmdgw.ws.command.ui;
 import java.util.Collections;
 import java.util.Map;
 
+import org.hawkular.bus.common.BasicMessageWithExtraData;
 import org.hawkular.bus.common.BinaryData;
 import org.hawkular.bus.common.ConnectionContextFactory;
 import org.hawkular.bus.common.Endpoint;
@@ -40,8 +41,8 @@ public class AddJdbcDriverCommand implements Command<AddJdbcDriverRequest, Gener
     public static final Class<AddJdbcDriverRequest> REQUEST_CLASS = AddJdbcDriverRequest.class;
 
     @Override
-    public GenericSuccessResponse execute(AddJdbcDriverRequest request, BinaryData binaryData,
-            CommandContext context) throws Exception {
+    public BasicMessageWithExtraData<GenericSuccessResponse> execute(AddJdbcDriverRequest request,
+            BinaryData binaryData, CommandContext context) throws Exception {
 
         MsgLogger.LOG.tracef(AddJdbcDriverCommand.class.getName() + " is about to execute the request [%s] ", request);
         // determine what feed needs to be sent the message
@@ -56,7 +57,7 @@ public class AddJdbcDriverCommand implements Command<AddJdbcDriverRequest, Gener
             MsgLogger.LOG.debugf("File upload request placed on bus. mid=[%s], request=[%s]", mid, request);
             GenericSuccessResponse response = new GenericSuccessResponse();
             response.setMessage("The execution request has been forwarded to feed [" + feedId + "] (id=" + mid + ")");
-            return response;
+            return new BasicMessageWithExtraData<>(response, null);
         }
     }
 }

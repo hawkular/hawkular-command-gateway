@@ -42,6 +42,7 @@ import org.hawkular.cmdgw.api.Authentication;
 import org.hawkular.cmdgw.api.GenericErrorResponseBuilder;
 import org.hawkular.cmdgw.ws.Constants;
 import org.hawkular.cmdgw.ws.MsgLogger;
+import org.hawkular.cmdgw.ws.WebSocketHelper;
 import org.hawkular.cmdgw.ws.command.Command;
 import org.hawkular.cmdgw.ws.command.CommandContext;
 
@@ -102,7 +103,7 @@ public class UIClientCommWebSocket {
                 nameAndJsonStr);
 
         String requestClassName = "?";
-        BasicMessage response;
+        BasicMessageWithExtraData<? extends BasicMessage> response;
 
         try {
             // parse the JSON and get its message POJO
@@ -117,7 +118,8 @@ public class UIClientCommWebSocket {
             if (commandClass == null) {
                 MsgLogger.LOG.errorInvalidCommandRequestUIClient(uiClientId, session.getId(), requestClassName);
                 String errorMessage = "Invalid command request: " + requestClassName;
-                response = new GenericErrorResponseBuilder().setErrorMessage(errorMessage).build();
+                response = new BasicMessageWithExtraData<>(new GenericErrorResponseBuilder().setErrorMessage(
+                        errorMessage).build(), null);
             } else {
                 CommandContext context = new CommandContext(connectedFeeds, connectedUIClients,
                         uiClientListenerGenerator.getConnectionFactory(), session);
@@ -136,15 +138,33 @@ public class UIClientCommWebSocket {
         } catch (Throwable t) {
             MsgLogger.LOG.errorCommandExecutionFailureUIClient(requestClassName, uiClientId, session.getId(), t);
             String errorMessage = "Command failed [" + requestClassName + "]";
-            response = new GenericErrorResponseBuilder()
+            response = new BasicMessageWithExtraData<>(new GenericErrorResponseBuilder()
                     .setThrowable(t)
                     .setErrorMessage(errorMessage)
-                    .build();
-
+                    .build(),
+                    null);
         }
 
-        String responseText = (response == null) ? null : ApiDeserializer.toHawkularFormat(response);
-        return responseText;
+        if (response != null) {
+            if (response.getBinaryData() == null) {
+                // if there is no binary data to stream back, return our response message and it will be sent
+                return ApiDeserializer.toHawkularFormat(response.getBasicMessage());
+            } else {
+                // there is binary data to stream back - do it ourselves and don't return anything
+                BinaryData hawkularResponse = ApiDeserializer.toHawkularFormat(response.getBasicMessage(),
+                        response.getBinaryData());
+
+                try {
+                    new WebSocketHelper().sendBinarySync(session, hawkularResponse);
+                } catch (IOException ioe) {
+                    MsgLogger.LOG.errorf(ioe,
+                            "Failed to send reply to UI client [%s] (session [%s]) (response=[%s])",
+                            uiClientId, session.getId(), response.getBasicMessage().getClass().getName());
+                }
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -162,7 +182,7 @@ public class UIClientCommWebSocket {
         MsgLogger.LOG.infoReceivedBinaryDataFromUIClient(session.getId());
 
         String requestClassName = "?";
-        BasicMessage response;
+        BasicMessageWithExtraData<? extends BasicMessage> response;
 
         try {
             // parse the JSON and get its message POJO, including any additional binary data being streamed
@@ -179,7 +199,8 @@ public class UIClientCommWebSocket {
             if (commandClass == null) {
                 MsgLogger.LOG.errorInvalidCommandRequestUIClient(uiClientId, session.getId(), requestClassName);
                 String errorMessage = "Invalid command request: " + requestClassName;
-                response = new GenericErrorResponseBuilder().setErrorMessage(errorMessage).build();
+                response = new BasicMessageWithExtraData<>(new GenericErrorResponseBuilder().setErrorMessage(
+                        errorMessage).build(), null);
             } else {
                 CommandContext context = new CommandContext(connectedFeeds, connectedUIClients,
                         uiClientListenerGenerator.getConnectionFactory(), session);
@@ -198,15 +219,33 @@ public class UIClientCommWebSocket {
         } catch (Throwable t) {
             MsgLogger.LOG.errorCommandExecutionFailureUIClient(requestClassName, uiClientId, session.getId(), t);
             String errorMessage = "Command failed [" + requestClassName + "]";
-            response = new GenericErrorResponseBuilder()
+            response = new BasicMessageWithExtraData<>(new GenericErrorResponseBuilder()
                     .setThrowable(t)
                     .setErrorMessage(errorMessage)
-                    .build();
-
+                    .build(),
+                    null);
         }
 
-        String responseText = (response == null) ? null : ApiDeserializer.toHawkularFormat(response);
-        return responseText;
+        if (response != null) {
+            if (response.getBinaryData() == null) {
+                // if there is no binary data to stream back, return our response message and it will be sent
+                return ApiDeserializer.toHawkularFormat(response.getBasicMessage());
+            } else {
+                // there is binary data to stream back - do it ourselves and don't return anything
+                BinaryData hawkularResponse = ApiDeserializer.toHawkularFormat(response.getBasicMessage(),
+                        response.getBinaryData());
+
+                try {
+                    new WebSocketHelper().sendBinarySync(session, hawkularResponse);
+                } catch (IOException ioe) {
+                    MsgLogger.LOG.errorf(ioe,
+                            "Failed to send reply to UI client [%s] (session [%s]) (response=[%s])",
+                            uiClientId, session.getId(), response.getBasicMessage().getClass().getName());
+                }
+            }
+        }
+
+        return null;
     }
 
     @OnClose

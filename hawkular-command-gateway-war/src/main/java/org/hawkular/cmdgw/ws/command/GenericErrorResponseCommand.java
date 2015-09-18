@@ -17,6 +17,7 @@
 package org.hawkular.cmdgw.ws.command;
 
 import org.hawkular.bus.common.BasicMessage;
+import org.hawkular.bus.common.BasicMessageWithExtraData;
 import org.hawkular.bus.common.BinaryData;
 import org.hawkular.cmdgw.api.GenericErrorResponse;
 import org.hawkular.cmdgw.ws.MsgLogger;
@@ -30,8 +31,8 @@ public class GenericErrorResponseCommand implements Command<GenericErrorResponse
     public static final Class<GenericErrorResponse> REQUEST_CLASS = GenericErrorResponse.class;
 
     @Override
-    public BasicMessage execute(GenericErrorResponse errorResponse, BinaryData binaryData, CommandContext context)
-            throws Exception {
+    public BasicMessageWithExtraData<BasicMessage> execute(GenericErrorResponse errorResponse, BinaryData binaryData,
+            CommandContext context) throws Exception {
 
         String errorMessage = errorResponse.getErrorMessage();
         String stackTrace = errorResponse.getStackTrace();

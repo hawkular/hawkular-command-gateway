@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.hawkular.bus.common.BasicMessage;
+import org.hawkular.bus.common.BasicMessageWithExtraData;
 import org.hawkular.bus.common.BinaryData;
 import org.hawkular.bus.common.ConnectionContextFactory;
 import org.hawkular.bus.common.Endpoint;
@@ -38,8 +39,8 @@ public class DeployApplicationResponseCommand implements Command<DeployApplicati
     public static final Class<DeployApplicationResponse> REQUEST_CLASS = DeployApplicationResponse.class;
 
     @Override
-    public BasicMessage execute(DeployApplicationResponse response, BinaryData binaryData, CommandContext context)
-            throws Exception {
+    public BasicMessageWithExtraData<BasicMessage> execute(DeployApplicationResponse response, BinaryData binaryData,
+            CommandContext context) throws Exception {
 
         String resPath = response.getResourcePath();
         String fileName = response.getDestinationFileName();
