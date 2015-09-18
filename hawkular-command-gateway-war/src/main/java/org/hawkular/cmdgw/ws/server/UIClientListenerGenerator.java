@@ -97,37 +97,34 @@ public class UIClientListenerGenerator {
 
         MessageProcessor messageProcessor = new MessageProcessor();
         String messageSelector = String.format("%s = '%s'", Constants.HEADER_UICLIENTID, uiClientId);
+        Endpoint endpoint;
+        ConsumerConnectionContext ccc;
 
         // add additional listeners for UI clients - the listeners only get messages destined for their UI client ID.
         // As we introduce new messages the UI can receive, add them here.
 
         // TODO TEMP HACK - RIGHT NOW, WE AREN'T PASSING THE HEADER SO USE null SELECTOR
-        //                  When we start putting the client ID in the message header, remove this if-true statement
-        if (true) {
-            Endpoint endpoint = Constants.DEST_UICLIENT_EXECUTE_OP_RESPONSE;
-            ConsumerConnectionContext ccc = ccf.createConsumerConnectionContext(endpoint, null);
-            messageProcessor.listen(ccc, new ExecuteOperationResponseListener(connectedUIClients));
-            contextList.add(ccc);
+        //                  When we start putting the client ID in the message header, remove this =null statement
+        messageSelector = null;
 
-            endpoint = Constants.DEST_UICLIENT_DEPLOY_APPLICATION_RESPONSE;
-            ccc = ccf.createConsumerConnectionContext(endpoint, null);
-            messageProcessor.listen(ccc, new DeployApplicationResponseListener(connectedUIClients));
-            contextList.add(ccc);
-
-            endpoint = Constants.DEST_UICLIENT_ADD_JDBC_DRIVER_RESPONSE;
-            ccc = ccf.createConsumerConnectionContext(endpoint, null);
-            messageProcessor.listen(ccc, new AddJdbcDriverResponseListener(connectedUIClients));
-            contextList.add(ccc);
-
-            endpoint = Constants.DEST_UICLIENT_ADD_DATASOURCE_RESPONSE;
-            ccc = ccf.createConsumerConnectionContext(endpoint, null);
-            messageProcessor.listen(ccc, new AddDatasourceResponseListener(connectedUIClients));
-            contextList.add(ccc);
-        }
-
-        Endpoint endpoint = Constants.DEST_UICLIENT_EXECUTE_OP_RESPONSE;
-        ConsumerConnectionContext ccc = ccf.createConsumerConnectionContext(endpoint, messageSelector);
+        endpoint = Constants.DEST_UICLIENT_EXECUTE_OP_RESPONSE;
+        ccc = ccf.createConsumerConnectionContext(endpoint, messageSelector);
         messageProcessor.listen(ccc, new ExecuteOperationResponseListener(connectedUIClients));
+        contextList.add(ccc);
+
+        endpoint = Constants.DEST_UICLIENT_DEPLOY_APPLICATION_RESPONSE;
+        ccc = ccf.createConsumerConnectionContext(endpoint, messageSelector);
+        messageProcessor.listen(ccc, new DeployApplicationResponseListener(connectedUIClients));
+        contextList.add(ccc);
+
+        endpoint = Constants.DEST_UICLIENT_ADD_JDBC_DRIVER_RESPONSE;
+        ccc = ccf.createConsumerConnectionContext(endpoint, messageSelector);
+        messageProcessor.listen(ccc, new AddJdbcDriverResponseListener(connectedUIClients));
+        contextList.add(ccc);
+
+        endpoint = Constants.DEST_UICLIENT_ADD_DATASOURCE_RESPONSE;
+        ccc = ccf.createConsumerConnectionContext(endpoint, messageSelector);
+        messageProcessor.listen(ccc, new AddDatasourceResponseListener(connectedUIClients));
         contextList.add(ccc);
 
         return;
