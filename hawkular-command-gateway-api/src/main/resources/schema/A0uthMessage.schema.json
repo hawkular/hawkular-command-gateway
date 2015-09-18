@@ -18,6 +18,7 @@
     "type": "object",
     "javaType": "org.hawkular.bus.common.BasicMessage"
   },
+  "javaInterfaces" : ["org.hawkular.bus.common.msg.features.FailOnUnknownProperties"],
   "javaType": "org.hawkular.cmdgw.api.AuthMessage",
   "description": "Message properties that are needed for authentication.",
   "additionalProperties": false,
