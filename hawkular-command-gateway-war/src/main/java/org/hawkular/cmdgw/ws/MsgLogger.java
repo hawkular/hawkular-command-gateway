@@ -136,4 +136,8 @@ public interface MsgLogger extends BasicLogger {
     @LogMessage(level = Logger.Level.ERROR)
     @Message(id = 26, value = "Cannot process an execute-operation-response message")
     void errorCannotProcessExecuteOperationResponseMessage(@Cause Throwable t);
+
+    @LogMessage(level = Logger.Level.ERROR)
+    @Message(id = 27, value = "Cannot process an Export JDR response message")
+    void errorCannotProcessExportJdrResponseMessage(@Cause Throwable t);
 }

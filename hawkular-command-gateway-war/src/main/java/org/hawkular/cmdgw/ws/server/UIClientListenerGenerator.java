@@ -28,6 +28,7 @@ import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.jms.ConnectionFactory;
 import javax.naming.InitialContext;
 import javax.persistence.PostRemove;
@@ -42,6 +43,7 @@ import org.hawkular.cmdgw.ws.mdb.AddDatasourceResponseListener;
 import org.hawkular.cmdgw.ws.mdb.AddJdbcDriverResponseListener;
 import org.hawkular.cmdgw.ws.mdb.DeployApplicationResponseListener;
 import org.hawkular.cmdgw.ws.mdb.ExecuteOperationResponseListener;
+import org.hawkular.cmdgw.ws.mdb.ExportJdrResponseListener;
 
 @Startup
 @Singleton
@@ -52,6 +54,9 @@ public class UIClientListenerGenerator {
 
     @Resource(mappedName = Constants.CONNECTION_FACTORY_JNDI)
     private ConnectionFactory connectionFactory;
+
+    @Resource
+    private ManagedExecutorService threadPoolService;
 
     private Map<String, ConnectionContextFactory> connContextFactories;
     private Map<String, List<ConsumerConnectionContext>> consumerContexts;
@@ -125,6 +130,11 @@ public class UIClientListenerGenerator {
         endpoint = Constants.DEST_UICLIENT_ADD_DATASOURCE_RESPONSE;
         ccc = ccf.createConsumerConnectionContext(endpoint, messageSelector);
         messageProcessor.listen(ccc, new AddDatasourceResponseListener(connectedUIClients));
+        contextList.add(ccc);
+
+        endpoint = Constants.DEST_UICLIENT_EXPORT_JDR_RESPONSE;
+        ccc = ccf.createConsumerConnectionContext(endpoint, null);
+        messageProcessor.listen(ccc, new ExportJdrResponseListener(connectedUIClients, threadPoolService));
         contextList.add(ccc);
 
         return;
