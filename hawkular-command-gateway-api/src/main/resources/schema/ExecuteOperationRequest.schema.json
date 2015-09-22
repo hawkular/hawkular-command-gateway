@@ -2,16 +2,13 @@
   "type": "object",
   "extends": {
     "type": "object",
-    "javaType": "org.hawkular.cmdgw.api.AuthMessage"
+    "javaType": "org.hawkular.cmdgw.api.ResourcePathRequest"
   },
   "javaType": "org.hawkular.cmdgw.api.ExecuteOperationRequest",
+  "javaInterfaces" : ["org.hawkular.cmdgw.api.ResourcePathDestination"],
   "additionalProperties": false,
   "description": "A request to execute an operation.",
   "properties": {
-    "resourcePath": {
-      "description" : "The inventory path to the resource that is to execute the operation",
-      "type": "string"
-    },
     "operationName": {
       "type": "string"
     },
@@ -21,6 +18,6 @@
       "javaType": "java.util.Map<String, String>"
     }
   },
-  "required": ["resourcePath", "operationName"]
+  "required": ["operationName"]
 }
 

@@ -2,16 +2,10 @@
   "type": "object",
   "extends": {
     "type": "object",
-    "javaType": "org.hawkular.cmdgw.api.AuthMessage"
+    "javaType": "org.hawkular.cmdgw.api.ResourcePathRequest"
   },
   "javaType": "org.hawkular.cmdgw.api.ExportJdrRequest",
+  "javaInterfaces" : ["org.hawkular.cmdgw.api.ResourcePathDestination"],
   "description": "Exports a JDR from the target server.",
-  "additionalProperties": false,
-  "properties": {
-    "resourcePath": {
-      "description" : "The inventory path to the server that is to execute the operation",
-      "type": "string"
-    }
-  },
-  "required": ["resourcePath"]
+  "additionalProperties": false
 }

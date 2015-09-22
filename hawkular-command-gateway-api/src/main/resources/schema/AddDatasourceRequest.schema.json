@@ -2,16 +2,12 @@
   "type": "object",
   "extends": {
     "type": "object",
-    "javaType": "org.hawkular.cmdgw.api.AuthMessage"
+    "javaType": "org.hawkular.cmdgw.api.ResourcePathRequest"
   },
   "javaType": "org.hawkular.cmdgw.api.AddDatasourceRequest",
   "description": "Adds a Datasource or a XA Datasource to a resource.",
   "additionalProperties": false,
   "properties": {
-    "resourcePath": {
-      "description" : "The inventory path to the Application Server resource where the driver should be installed",
-      "type": "string"
-    },
     "xaDatasource": {
       "description" : "true if an XA datasource should be added, false otherwise",
       "javaType": "boolean",
@@ -59,5 +55,5 @@
       "type": "string"
     }
   },
-  "required": ["resourcePath", "isXaDatasource", "datasourceName", "jndiName", "driverName"]
+  "required": ["isXaDatasource", "datasourceName", "jndiName", "driverName"]
 }
