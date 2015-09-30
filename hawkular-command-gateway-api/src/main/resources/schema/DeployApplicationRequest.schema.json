@@ -2,16 +2,13 @@
   "type": "object",
   "extends": {
     "type": "object",
-    "javaType": "org.hawkular.cmdgw.api.AuthMessage"
+    "javaType": "org.hawkular.cmdgw.api.ResourcePathRequest"
   },
   "javaType": "org.hawkular.cmdgw.api.DeployApplicationRequest",
+  "javaInterfaces" : ["org.hawkular.cmdgw.api.ResourcePathDestination"],
   "description": "Deploys an application to a resource. The actual deployment file content must be appended to this JSON message.",
   "additionalProperties": false,
   "properties": {
-    "resourcePath": {
-      "description" : "The inventory path to the resource that is to deploy the application",
-      "type": "string"
-    },
     "destinationFileName": {
       "type": "string"
     },
@@ -20,5 +17,5 @@
       "type": "boolean"
     }
   },
-  "required": ["resourcePath", "destinationFileName"]
+  "required": ["destinationFileName"]
 }

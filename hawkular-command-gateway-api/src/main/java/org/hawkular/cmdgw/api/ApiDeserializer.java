@@ -19,6 +19,7 @@ package org.hawkular.cmdgw.api;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.hawkular.bus.common.AbstractMessage;
 import org.hawkular.bus.common.BasicMessage;
 import org.hawkular.bus.common.BasicMessageWithExtraData;
 import org.hawkular.bus.common.BinaryData;
@@ -79,7 +80,7 @@ public class ApiDeserializer {
      * @param nameAndJson the string to be deserialized
      * @return the object represented by the JSON
      */
-    public <T extends BasicMessage> T deserialize(String nameAndJson) {
+    public <T extends BasicMessage> BasicMessageWithExtraData<T> deserialize(String nameAndJson) {
         String[] nameAndJsonArray = fromHawkularFormat(nameAndJson);
         String name = nameAndJsonArray[0];
         String json = nameAndJsonArray[1];
@@ -92,7 +93,7 @@ public class ApiDeserializer {
 
         try {
             Class<T> pojo = (Class<T>) Class.forName(name);
-            return BasicMessage.fromJSON(json, pojo);
+            return new BasicMessageWithExtraData(AbstractMessage.fromJSON(json, pojo), null);
         } catch (Exception e) {
             throw new RuntimeException("Cannot deserialize: [" + nameAndJson + "]", e);
         }
@@ -146,7 +147,7 @@ public class ApiDeserializer {
         // We now have the name and the input stream is pointing at the JSON
         try {
             Class<T> pojo = (Class<T>) Class.forName(name);
-            BasicMessageWithExtraData<T> results = BasicMessage.fromJSON(input, pojo);
+            BasicMessageWithExtraData<T> results = AbstractMessage.fromJSON(input, pojo);
             return results;
         } catch (Exception e) {
             throw new RuntimeException("Cannot deserialize stream with object [" + name + "]", e);

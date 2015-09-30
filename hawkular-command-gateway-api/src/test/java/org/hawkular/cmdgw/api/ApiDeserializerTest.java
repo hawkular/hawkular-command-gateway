@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Scanner;
 
+import org.hawkular.bus.common.AbstractMessage;
 import org.hawkular.bus.common.BasicMessage;
 import org.hawkular.bus.common.BasicMessageWithExtraData;
 import org.hawkular.bus.common.BinaryData;
@@ -35,7 +36,7 @@ public class ApiDeserializerTest {
 
         String nameAndJson = EchoRequest.class.getName()
                 + "={\"echoMessage\":\"msg\", \"authentication\":{\"username\":\"foo\", \"password\":\"bar\"}}";
-        BasicMessage request = ad.deserialize(nameAndJson);
+        BasicMessage request = ad.deserialize(nameAndJson).getBasicMessage();
         Assert.assertTrue(request instanceof EchoRequest);
         EchoRequest echoRequest = (EchoRequest) request;
         Assert.assertEquals("msg", echoRequest.getEchoMessage());
@@ -47,7 +48,7 @@ public class ApiDeserializerTest {
 
         nameAndJson = EchoRequest.class.getName()
                 + "={\"echoMessage\":\"msg\", \"authentication\":{\"token\":\"tok\", \"persona\":\"polly\"}}";
-        request = ad.deserialize(nameAndJson);
+        request = ad.deserialize(nameAndJson).getBasicMessage();
         Assert.assertTrue(request instanceof EchoRequest);
         echoRequest = (EchoRequest) request;
         Assert.assertEquals("msg", echoRequest.getEchoMessage());
@@ -63,7 +64,7 @@ public class ApiDeserializerTest {
         ApiDeserializer ad = new ApiDeserializer();
 
         String nameAndJson = EchoRequest.class.getName() + "={\"echoMessage\":\"msg\"}";
-        BasicMessage request = ad.deserialize(nameAndJson);
+        BasicMessage request = ad.deserialize(nameAndJson).getBasicMessage();
         Assert.assertTrue(request instanceof EchoRequest);
         EchoRequest echoRequest = (EchoRequest) request;
         Assert.assertEquals("msg", echoRequest.getEchoMessage());
@@ -215,8 +216,8 @@ public class ApiDeserializerTest {
 
         ByteArrayInputStream in = new UncloseableByteArrayInputStream(nameAndJsonPlusExtra.getBytes());
 
-        BasicMessageWithExtraData<BasicMessage> map = ad.deserialize(in);
-        BasicMessage request = map.getBasicMessage();
+        BasicMessageWithExtraData<AbstractMessage> map = ad.deserialize(in);
+        AbstractMessage request = map.getBasicMessage();
         Assert.assertTrue(request instanceof EchoRequest);
         EchoRequest echoRequest = (EchoRequest) request;
         Assert.assertEquals("msg", echoRequest.getEchoMessage());
@@ -246,8 +247,8 @@ public class ApiDeserializerTest {
         String nameAndJson = EchoRequest.class.getName() + "={\"echoMessage\":\"msg\"}";
         ByteArrayInputStream in = new UncloseableByteArrayInputStream(nameAndJson.getBytes());
 
-        BasicMessageWithExtraData<BasicMessage> map = ad.deserialize(in);
-        BasicMessage request = map.getBasicMessage();
+        BasicMessageWithExtraData<AbstractMessage> map = ad.deserialize(in);
+        AbstractMessage request = map.getBasicMessage();
         Assert.assertTrue(request instanceof EchoRequest);
         EchoRequest echoRequest = (EchoRequest) request;
         Assert.assertEquals("msg", echoRequest.getEchoMessage());
@@ -263,7 +264,7 @@ public class ApiDeserializerTest {
         String nameAndJson = String.format("%s=%s", pojo.getClass().getSimpleName(), pojo.toJSON());
         System.out.println("ApiDeserializerTest: " + nameAndJson);
         ApiDeserializer ad = new ApiDeserializer();
-        T results = ad.deserialize(nameAndJson);
+        T results = (T) ad.deserialize(nameAndJson).getBasicMessage();
         Assert.assertNotSame(pojo, results); // just sanity check
         return results;
     }
