@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.hawkular.cmdgw</groupId>
     <artifactId>hawkular-command-gateway</artifactId>
-    <version>0.9.0.Final</version>
+    <version>0.9.1.Final-SNAPSHOT</version>
   </parent>
 
   <artifactId>hawkular-command-gateway-war</artifactId>
@@ -62,7 +62,7 @@
     <dependency>
       <groupId>org.hawkular.cmdgw</groupId>
       <artifactId>hawkular-command-gateway-api</artifactId>
-      <version>0.9.0.Final</version>
+      <version>0.9.1.Final-SNAPSHOT</version>
     </dependency>
 
     <dependency>
