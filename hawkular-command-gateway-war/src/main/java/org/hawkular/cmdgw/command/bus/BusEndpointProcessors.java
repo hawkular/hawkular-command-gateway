@@ -62,6 +62,7 @@ public class BusEndpointProcessors {
 
         private final Endpoint endpoint;
         private final String messageSelector;
+        private ConnectionContextFactory connectionContextFactory;
 
         public BusWsSessionListener(String selectorHeader, String selectorValue, Endpoint endpoint,
                 BasicMessageListener<BasicMessage> busEndpointListener) {
@@ -85,6 +86,7 @@ public class BusEndpointProcessors {
                     busEndpointListener.getClass().getName(), messageSelector, endpoint);
 
             try {
+                connectionContextFactory = new ConnectionContextFactory(true, connectionFactory);
                 consumerConnectionContext = connectionContextFactory.createConsumerConnectionContext(endpoint,
                         messageSelector);
                 new MessageProcessor().listen(consumerConnectionContext, busEndpointListener);
@@ -110,6 +112,14 @@ public class BusEndpointProcessors {
                 } catch (IOException e) {
                     log.errorCouldNotClose(consumerConnectionContext.getClass().getName(), messageSelector,
                             endpoint.getName(), e);
+                }
+            }
+
+            if (connectionContextFactory != null) {
+                try {
+                    connectionContextFactory.close();
+                } catch (Exception e) {
+                    log.errorf(e, "Could not close connection context factory: " + getClass().getName());
                 }
             }
         }
@@ -195,9 +205,7 @@ public class BusEndpointProcessors {
 
     @Inject
     private BusCommandContextFactory commandContextFactory;
-    private ConnectionContextFactory connectionContextFactory;
-    // @Resource
-    // private ExecutorService threadPool;
+
     @Resource(mappedName = Constants.CONNECTION_FACTORY_JNDI)
     private ConnectionFactory connectionFactory;
 
@@ -215,19 +223,11 @@ public class BusEndpointProcessors {
         if (uiClientSessionListenerProducer != null) {
             wsEndpoints.getUiClientSessions().removeWsSessionListenerProducer(uiClientSessionListenerProducer);
         }
-
-        try {
-            connectionContextFactory.close();
-        } catch (Exception e) {
-            log.errorf(e, "Could not initialize " + getClass().getName());
-        }
     }
 
     public void initialize(@Observes @Initialized(ApplicationScoped.class) Object ignore) {
         log.debugf("Initializing [%s]", this.getClass().getName());
         try {
-            connectionContextFactory = new ConnectionContextFactory(true, connectionFactory);
-
             feedSessionListenerProducer = new BiFunction<String, Session, WsSessionListener>() {
                 @Override
                 public WsSessionListener apply(String key, Session session) {
@@ -249,7 +249,7 @@ public class BusEndpointProcessors {
                 }
             };
             wsEndpoints.getUiClientSessions().addWsSessionListenerProducer(uiClientSessionListenerProducer);
-        } catch (JMSException e) {
+        } catch (Exception e) {
             log.errorf(e, "Could not initialize " + getClass().getName());
         }
 
