@@ -247,7 +247,7 @@ public class BusEndpointProcessors {
                 }
             };
             wsEndpoints.getUiClientSessions().addWsSessionListenerProducer(uiClientSessionListenerProducer);
-        } catch (JMSException e) {
+        } catch (Exception e) {
             log.errorf(e, "Could not initialize " + getClass().getName());
         }
 
