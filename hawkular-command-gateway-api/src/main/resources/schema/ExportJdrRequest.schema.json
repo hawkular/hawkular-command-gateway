@@ -6,6 +6,6 @@
   },
   "javaType": "org.hawkular.cmdgw.api.ExportJdrRequest",
   "javaInterfaces" : ["org.hawkular.cmdgw.api.ResourcePathDestination"],
-  "description": "Exports a JDR from the target server.",
+  "description": "Exports a JDR from the Application Server instance given by the inventory path stored in resourcePath field.",
   "additionalProperties": false
 }

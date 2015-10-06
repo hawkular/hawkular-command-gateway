@@ -6,7 +6,7 @@
   },
   "javaType": "org.hawkular.cmdgw.api.ResourcePathResponse",
   "javaInterfaces" : ["org.hawkular.cmdgw.api.UiSessionDestination"],
-  "description": "Results of a Resource releated operation. The awkward name of the schema file A2ResourcePathResponse.schema.json is there so that this schema file precedes all other schema files alphabetically. This is required by jsonschema2pojo-maven-plugin that is not resolving the inter-schema dependencies, it just takes files in alphabetical order.",
+  "description": "Results of a Resource related operation. The awkward name of the schema file A2ResourcePathResponse.schema.json is there so that this schema file precedes all other schema files alphabetically. This is required by jsonschema2pojo-maven-plugin that is not resolving the inter-schema dependencies, it just takes files in alphabetical order.",
   "additionalProperties": false,
   "properties": {
     "resourcePath": {

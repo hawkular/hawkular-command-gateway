@@ -6,11 +6,11 @@
   },
   "javaType": "org.hawkular.cmdgw.api.ResourcePathRequest",
   "javaInterfaces" : ["org.hawkular.cmdgw.api.ResourcePathDestination", "org.hawkular.cmdgw.api.UiSessionOrigin"],
-  "description": "Adds a Datasource or a XA Datasource to a resource. The awkward name of the schema file A1ResourcePathRequest.schema.json is there so that this schema file precedes all other schema files alphabetically. This is required by jsonschema2pojo-maven-plugin that is not resolving the inter-schema dependencies, it just takes files in alphabetical order.",
+  "description": "A request targeting a resource given by the resourcePath field. The awkward name of the schema file A1ResourcePathRequest.schema.json is there so that this schema file precedes all other schema files alphabetically. This is required by jsonschema2pojo-maven-plugin that is not resolving the inter-schema dependencies, it just takes files in alphabetical order.",
   "additionalProperties": false,
   "properties": {
     "resourcePath": {
-      "description" : "The inventory path to the Application Server resource where the driver should be installed",
+      "description" : "",
       "type": "string"
     },
     "senderRequestId": {
