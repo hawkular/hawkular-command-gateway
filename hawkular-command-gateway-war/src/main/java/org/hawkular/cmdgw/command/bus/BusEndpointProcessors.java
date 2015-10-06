@@ -115,10 +115,12 @@ public class BusEndpointProcessors {
                 }
             }
 
-            try {
-                connectionContextFactory.close();
-            } catch (Exception e) {
-                log.errorf(e, "Could not initialize " + getClass().getName());
+            if (connectionContextFactory != null) {
+                try {
+                    connectionContextFactory.close();
+                } catch (Exception e) {
+                    log.errorf(e, "Could not close connection context factory: " + getClass().getName());
+                }
             }
         }
 
