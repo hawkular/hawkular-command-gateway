@@ -32,6 +32,9 @@ public class UiSessionDestinationBusCommand implements BusCommand<UiSessionDesti
     private static final MsgLogger log = GatewayLoggers.getLogger(UiSessionDestinationBusCommand.class);
 
     /**
+     * This simply takes the given {@code message} and sends it directly to the UI client over
+     * that UI client's websocket connection.
+     *
      * @see org.hawkular.cmdgw.command.bus.BusCommand#execute(org.hawkular.bus.common.BasicMessageWithExtraData,
      *      org.hawkular.cmdgw.command.bus.BusCommandContext)
      */
@@ -44,7 +47,7 @@ public class UiSessionDestinationBusCommand implements BusCommand<UiSessionDesti
             throw new IllegalStateException(request.getClass().getName() + ".destinationSessionId must not be null");
         }
 
-        log.tracef("%s is about to execute the request [%s] ", getClass().getName(), request);
+        log.tracef("[%s] is about to execute the request [%s] ", getClass().getName(), request);
 
         Session session = context.getConnectedUIClients().getSession(destinationSessionId);
         if (session != null) {

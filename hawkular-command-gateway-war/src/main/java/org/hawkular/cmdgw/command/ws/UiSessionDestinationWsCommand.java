@@ -30,7 +30,10 @@ import org.hawkular.cmdgw.log.MsgLogger;
 
 /**
  * A {@link WsCommand} that transfers messages implementing {@link UiSessionDestination} from a feed WebSocket to a bus
- * endpint to be delivered to a UI WebSocket.
+ * endpoint to be delivered to a UI WebSocket.
+ * <p>
+ * This particular command implementation always puts the message on the
+ * {@link Constants#UI_COMMAND_QUEUE} bus endpoint.
  *
  * @author <a href="https://github.com/ppalaga">Peter Palaga</a>
  */

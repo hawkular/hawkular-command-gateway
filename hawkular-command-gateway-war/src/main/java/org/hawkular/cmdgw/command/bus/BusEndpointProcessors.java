@@ -55,6 +55,10 @@ public class BusEndpointProcessors {
     /**
      * A {@link WsSessionListener} that adds the given {@link #busEndpointListener} to the given {@link #endpoint} on
      * {@link #sessionAdded()} and removes it on {@link #sessionRemoved()}.
+     * <p>
+     * Each instance of this object is responsible for adding a bus listener to a specific bus queue or topic that
+     * will listen only for messages for a specific client (see the "selectorHeader" and "selectorValue"
+     * arguments to the constructor).
      */
     private class BusWsSessionListener implements WsSessionListener {
         private final BasicMessageListener<BasicMessage> busEndpointListener;
@@ -126,6 +130,11 @@ public class BusEndpointProcessors {
 
     }
 
+    /**
+     * This is the actual JMS bus listener that will consume bus messages destined for
+     * a particular feed. When this listener receives a bus message, it will forward
+     * that message to the feed over the feed's websocket connection.
+     */
     private static class FeedBusEndpointListener extends BasicMessageListener<BasicMessage> {
 
         private final Endpoint endpoint;
@@ -149,11 +158,11 @@ public class BusEndpointProcessors {
                 String foundFeedId = basicMessage.getHeaders().get(Constants.HEADER_FEEDID);
                 if (foundFeedId == null) {
                     log.errorMessageWithoutFeedId(basicMessage.getClass().getName(), Constants.HEADER_FEEDID,
-                            Constants.FEED_COMMAND_QUEUE.getName());
+                            endpoint.toString());
                 } else if (!foundFeedId.equals(expectedFeedId)) {
                     log.errorListenerGotMessageWithUnexpectedHeaderValue(this.getClass().getName(),
                             basicMessage.getClass().getName(), Constants.HEADER_FEEDID, foundFeedId,
-                            expectedFeedId, Constants.FEED_COMMAND_QUEUE.getName());
+                            expectedFeedId, endpoint.toString());
                 } else {
                     new WebSocketHelper().sendSync(session, messageWithData);
                 }
@@ -165,6 +174,13 @@ public class BusEndpointProcessors {
 
     }
 
+    /**
+     * This is the actual JMS bus listener that will consume bus messages destined for
+     * a particular UI client. When this listener receives command as a bus message,
+     * that command's executor will be invoked. Typically, that invocation will
+     * simply forward that command message to the UI client over the UI client's websocket
+     * connection but command implementations can vary.
+     */
     private static class UiClientBusEndpointListener
             extends org.hawkular.bus.common.consumer.BasicMessageListener<BasicMessage> {
         private final BusCommandContextFactory commandContextFactory;
@@ -225,12 +241,19 @@ public class BusEndpointProcessors {
         }
     }
 
+    /**
+     * This creates the bi-function listener-producers that will create listeners which will
+     * create JMS bus listeners for each websocket session that gets created in the future.
+     *
+     * @param ignore unused
+     */
     public void initialize(@Observes @Initialized(ApplicationScoped.class) Object ignore) {
         log.debugf("Initializing [%s]", this.getClass().getName());
         try {
             feedSessionListenerProducer = new BiFunction<String, Session, WsSessionListener>() {
                 @Override
                 public WsSessionListener apply(String key, Session session) {
+                    // In the future, if we need other queues/topics that need to be listened to, we add them here.
                     final Endpoint endpoint = Constants.FEED_COMMAND_QUEUE;
                     BasicMessageListener<BasicMessage> busEndpointListener = new FeedBusEndpointListener(session, key,
                             endpoint);
@@ -242,6 +265,7 @@ public class BusEndpointProcessors {
             uiClientSessionListenerProducer = new BiFunction<String, Session, WsSessionListener>() {
                 @Override
                 public WsSessionListener apply(String key, Session session) {
+                    // In the future, if we need other queues/topics that need to be listened to, we add them here.
                     final Endpoint endpoint = Constants.UI_COMMAND_QUEUE;
                     BasicMessageListener<BasicMessage> busEndpointListener = new UiClientBusEndpointListener(
                             commandContextFactory, busCommands, endpoint);

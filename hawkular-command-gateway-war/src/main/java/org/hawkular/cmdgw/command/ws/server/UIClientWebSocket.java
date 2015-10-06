@@ -32,7 +32,7 @@ import org.hawkular.cmdgw.log.GatewayLoggers;
 import org.hawkular.cmdgw.log.MsgLogger;
 
 /**
- * This is similiar to the feed web socket endpoint, however, it has a different set of allowed commants that can be
+ * This is similiar to the feed web socket endpoint, however, it has a different set of allowed commands that can be
  * processed for a UI client.
  */
 @ServerEndpoint(UIClientWebSocket.ENDPOINT)
@@ -45,6 +45,12 @@ public class UIClientWebSocket extends AbstractGatewayWebSocket {
         super(ENDPOINT);
     }
 
+    /**
+     * When a UI client connects, this method is called. This will immediately send a welcome
+     * message to the UI client.
+     *
+     * @param session the new UI client's session
+     */
     @OnOpen
     public void uiClientSessionOpen(Session session) {
         log.infoWsSessionOpened(session.getId(), endpoint);
@@ -55,7 +61,7 @@ public class UIClientWebSocket extends AbstractGatewayWebSocket {
         try {
             new WebSocketHelper().sendBasicMessageSync(session, welcomeResponse);
         } catch (IOException e) {
-            log.warnf(e, "Could not send %s to UI client session [%s].", WelcomeResponse.class.getName(),
+            log.warnf(e, "Could not send [%s] to UI client session [%s].", WelcomeResponse.class.getName(),
                     session.getId());
         }
     }

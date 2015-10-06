@@ -59,14 +59,26 @@ public abstract class AbstractGatewayWebSocket {
     @Inject
     protected WsCommandContextFactory commandContextFactory;
 
+    /**
+     * This is the actual URL context of the websocket endpoint. For example, something
+     * like "ui/ws" for a UI client websocket endpoint or "feed/{feedId}" for a feed websocket endpoint.
+     */
     protected final String endpoint;
 
     @Inject
     protected WsCommands wsCommands;
 
+    /**
+     * A container that holds all known and currently active websocket clients (UI and feed clients).
+     */
     @Inject
     protected WsEndpoints wsEndpoints;
 
+    /**
+     * These perform some additional processing when UI clients or feeds connect and disconnect.
+     * This performs such tasks as adding and removing bus listeners that will help process
+     * message flow for UI clients and feeds.
+     */
     @Inject
     protected BusEndpointProcessors busEndpointProcessors;
 
@@ -75,6 +87,15 @@ public abstract class AbstractGatewayWebSocket {
         this.endpoint = endpoint;
     }
 
+    /**
+     * This makes sure the message is properly authenticated. If the message is not authenticated
+     * with the appropriate credentials, an exception is thrown. Otherwise, this returns silently,
+     * allowing the caller to continue.
+     *
+     * @param basicMessage the message (including its authentication credentials) to be authenticated
+     * @param session the session that sent the message
+     * @throws WebsocketAuthenticationException if the authentication check fails
+     */
     protected void authenticate(BasicMessage basicMessage, Session session) throws WebsocketAuthenticationException {
         // if no authentication information is passed in the message, we will still ask Hawkular Accounts
         // to authenticate our session. This is to ensure any previous credentials/token that was authenticated

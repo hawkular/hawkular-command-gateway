@@ -26,7 +26,7 @@ import org.hawkular.cmdgw.Constants;
 import org.hawkular.cmdgw.command.ws.WsEndpoints;
 
 /**
- * A factory for creatiion of {@link BusCommandContext}s.
+ * A factory for creation of {@link BusCommandContext}s.
  *
  * @author <a href="https://github.com/ppalaga">Peter Palaga</a>
  */

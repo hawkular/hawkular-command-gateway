@@ -32,6 +32,9 @@ import org.hawkular.cmdgw.api.UiSessionDestination;
 @ApplicationScoped
 public class WsCommands {
 
+    // Here we define the only known commands we are expected to handle.
+    // Notice we instantiate them here - these must be thread-safe.
+
     private final ResourcePathDestinationWsCommand resourcePathDestinationWsCommand = //
     new ResourcePathDestinationWsCommand();
 

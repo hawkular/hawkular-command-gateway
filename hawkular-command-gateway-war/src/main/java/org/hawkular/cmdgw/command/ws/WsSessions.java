@@ -33,8 +33,11 @@ import org.hawkular.cmdgw.log.GatewayLoggers;
 import org.hawkular.cmdgw.log.MsgLogger;
 
 /**
- * Maintains a map of {@link Session}s currently connected with the server. The choice of the key fro the map is up to
- * the caller. A {@code sessionId} of a {@link Session} or a {@code feedId} are the most prominent candidates for keys.
+ * Maintains a map of websocket {@link Session}s currently connected with the server.
+ * The choice of the key for the map is up to the caller.
+ * <p>
+ * A {@code sessionId} of a UI client's {@link Session} or a feed's {@code feedId} are the most prominent
+ * candidates for keys.
  * <p>
  * A thread safety note: this class uses a {@link ReadWriteLock} internally, hence its public methods can be safely
  * called from multiple threads.
@@ -44,7 +47,7 @@ import org.hawkular.cmdgw.log.MsgLogger;
 public class WsSessions {
 
     /**
-     * A {@link Session} with its attached {@link WsSessionListener}s.
+     * A websocket {@link Session} with its attached {@link WsSessionListener}s.
      */
     private static class SessionEntry {
         private final Session session;
@@ -96,11 +99,16 @@ public class WsSessions {
     }
 
     /**
-     * Stores the given {@code session} under the given {@code key}. If there is already a session associated with the
-     * given {@code key}, the given {@code session} is closed, it is not added or associated with the given key and an
-     * error will be logged. The original session remains associated with the {@code key}.
+     * Stores the given {@code newSession} under the given {@code key}.
+     * <p>
+     * If there is already a session associated with the given {@code key}, the given {@code newSession} is closed;
+     * it is not added or associated with the given key and an error will be logged. The original session remains
+     * associated with the {@code key}.
+     * <p>
+     * When adding a session, that new session's websocket session listeners will be told via
+     * {@link WsSessionListener#sessionAdded()}.
      *
-     * @param key the key (feedId or sessionId) that will be associated wit the new session
+     * @param key the key (feedId or sessionId) that will be associated with the new session
      * @param newSession the new session to add
      * @return {@code true} if the session was added; {@code false} otherwise.
      */
@@ -138,6 +146,12 @@ public class WsSessions {
     /**
      * Add the given {@code wsSessionListenerProducers} to the internal list of {@link WsSessionListener} producers.
      *
+     * A listener-producer is just a bi-function that takes a key string (like a UI client session ID or a feed ID)
+     * and a websocket {@link Session} and produces a websocket session listener. A websocket session listener
+     * has the job of performing tasks when a websocket client connects and disconnects (for example, when a
+     * websocket client connects and its websocket session is created, a websocket session listener will then need to
+     * add bus listeners so the websocket client's messages can be processed properly).
+     *
      * @param wsSessionListenerProducer a function that produces {@link WsSessionListener} for a given pair of
      *        {@code sessionKey} and {@link Session}.
      */
@@ -149,6 +163,9 @@ public class WsSessions {
      * Creates a new {@link SessionEntry} for the given {@code sessionKey} and {@code session}. Iterates over
      * {@link #wsSessionListenerProducers} to get {@link WsSessionListener}s that will be attached to the given
      * {@code session}.
+     * <p>
+     * Note that this only produces/assigns websocket session listeners to the sessions, but the listeners are not
+     * told to do anything yet.
      *
      * @param sessionKey the sessionId or feedId
      * @param session the {@link Session} for which we are creating the {@link SessionEntry}
@@ -185,6 +202,9 @@ public class WsSessions {
      * Removes the session associated with the given {@code key}. If {@code doomedSession} is not {@code null}, the
      * session matching the given {@code key} in {@link #sessions} will only be removed if that session has the same ID
      * as the given {@code doomedSession}.
+     * <p>
+     * When removing a known session, that doomed session's websocket session listeners will be told via
+     * {@link WsSessionListener#sessionRemoved()}.
      *
      * @param key identifies the session to be removed
      * @param doomedSession if not null, ensures that only this session will be removed

@@ -36,6 +36,9 @@ import org.hawkular.inventory.api.model.CanonicalPath;
  * A {@link WsCommand} that transfers messages implementing {@link ResourcePathDestination} from a UI WebSocket to a bus
  * endpoint to be handled by a feed. The feedId is extracted from {@link ResourcePathDestination#getResourcePath()}
  * using methods in {@link CanonicalPath}.
+ * <p>
+ * This particular command implementation always puts the message on the
+ * {@link Constants#FEED_COMMAND_QUEUE} bus endpoint.
  *
  * @author <a href="https://github.com/ppalaga">Peter Palaga</a>
  */
@@ -51,7 +54,7 @@ public class ResourcePathDestinationWsCommand implements WsCommand<ResourcePathD
             throw new IllegalStateException(request.getClass().getName() + ".resourcePath must not be null");
         }
 
-        log.tracef("%s is about to execute the request [%s] ", getClass().getName(), request);
+        log.tracef("[%s] is about to execute the request [%s] ", getClass().getName(), request);
         // determine what feed needs to be sent the message
         CanonicalPath resourcePath = CanonicalPath.fromString(rawResourcePath);
         String feedId = resourcePath.ids().getFeedId();

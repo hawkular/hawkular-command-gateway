@@ -19,7 +19,14 @@ package org.hawkular.cmdgw.command.ws;
 import javax.websocket.Session;
 
 /**
- * A simple listener that is attached to a single {@link Session}.
+ * A simple listener that is attached to a single websocket {@link Session}.
+ * <p>
+ * When a new websocket client connects, this object's {@link #sessionAdded()} method will be called
+ * informing this object that a new client is ready to begin sending commands over the websocket.
+ * <p>
+ * When a old websocket client disconnects, this object's {@link #sessionRemoved()} method will be called
+ * informing this object that it should clean up any resources or other connections that are no longer
+ * needed now that the client has gone away.
  * <p>
  * Note on concurrency: The implementors are warranted that {@link #sessionAdded()} will be called before
  * {@link #sessionRemoved()} and that there will be no overlapping calls of these methods from distinct threads. Further
