@@ -1,4 +1,12 @@
 {
+  "definitions": {
+    "responseStatus": {
+      "type": "string",
+      "javaType": "org.hawkular.cmdgw.api.ResponseStatus",
+      "description": "A status of a response",
+      "enum": ["OK", "ERROR"]
+    }
+  },
   "type": "object",
   "extends": {
     "type": "object",
@@ -22,7 +30,7 @@
       "type": "string"
     },
     "status": {
-      "type": "string",
+      "$ref": "#/definitions/responseStatus",
       "description": "Indicates if the deployment succeeded or failed."
     },
     "message": {
