@@ -10,30 +10,6 @@
         "token":    { "type": "string" },
         "persona":  { "type": "string" }
       }
-    },
-    "recipientType": {
-      "type": "object",
-      "description": "A binary attachment metadata",
-      "enum": ["UI", "resource"]
-    },
-    "attachment": {
-      "type": "object",
-      "description": "A binary attachment metadata",
-      "additionalProperties": false,
-      "properties": {
-        "filename": {
-          "description" : "Plain file name without any folders. Just a proposal to use when storing in file system.",
-          "type": "string"
-        },
-        "length": {
-          "description" : "The length of the binary content in bytes",
-          "type": "int"
-        },
-        "md5":    {
-          "description" : "An md5 hash of the binary content",
-          "type": "string"
-        }
-      }
     }
   },
 
