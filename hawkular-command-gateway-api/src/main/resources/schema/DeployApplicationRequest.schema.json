@@ -6,7 +6,7 @@
   },
   "javaType": "org.hawkular.cmdgw.api.DeployApplicationRequest",
   "javaInterfaces" : ["org.hawkular.cmdgw.api.ResourcePathDestination"],
-  "description": "Deploys an application to a resource. The actual deployment file content must be appended to this JSON message.",
+  "description": "Deploys an application to an Application Server instance given by the inventory path stored in resourcePath field. The actual deployment file content must be appended to this JSON message.",
   "additionalProperties": false,
   "properties": {
     "destinationFileName": {

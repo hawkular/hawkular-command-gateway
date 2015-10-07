@@ -7,7 +7,7 @@
   "javaType": "org.hawkular.cmdgw.api.ExecuteOperationRequest",
   "javaInterfaces" : ["org.hawkular.cmdgw.api.ResourcePathDestination"],
   "additionalProperties": false,
-  "description": "A request to execute an operation.",
+  "description": "A request to execute an operation on a resource given by the inventory path stored in resourcePath field.",
   "properties": {
     "operationName": {
       "type": "string"

@@ -5,7 +5,7 @@
     "javaType": "org.hawkular.cmdgw.api.ResourcePathRequest"
   },
   "javaType": "org.hawkular.cmdgw.api.AddDatasourceRequest",
-  "description": "Adds a Datasource or a XA Datasource to a resource.",
+  "description": "Adds a Datasource or a XA Datasource to an Application Server instance given by the inventory path stored in resourcePath field.",
   "additionalProperties": false,
   "properties": {
     "xaDatasource": {
@@ -55,5 +55,5 @@
       "type": "string"
     }
   },
-  "required": ["isXaDatasource", "datasourceName", "jndiName", "driverName"]
+  "required": ["xaDatasource", "datasourceName", "jndiName", "driverName"]
 }
