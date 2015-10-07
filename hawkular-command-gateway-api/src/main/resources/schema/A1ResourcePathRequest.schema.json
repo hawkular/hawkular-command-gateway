@@ -10,7 +10,7 @@
   "additionalProperties": false,
   "properties": {
     "resourcePath": {
-      "description" : "",
+      "description" : "The inventory path to the resource that is targeted by this request.",
       "type": "string"
     },
     "senderRequestId": {
