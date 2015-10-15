@@ -67,7 +67,7 @@
     <!-- Dependency versions in alphabetic order -->
     <version.org.hawkular.accounts>1.0.15.Final</version.org.hawkular.accounts>
     <version.org.hawkular.bus>0.7.0.Final</version.org.hawkular.bus>
-    <version.org.hawkular.inventory>0.6.0.Final-SRC-revision-0cfed2a0583246f8d6372501bd8a9204ea25d09d</version.org.hawkular.inventory>
+    <version.org.hawkular.inventory>0.6.0.Final</version.org.hawkular.inventory>
 
     <!-- Plugin versions in alphabetic order -->
     <plugin.version.org.jsonschema2pojo>0.4.14</plugin.version.org.jsonschema2pojo>
