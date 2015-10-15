@@ -65,7 +65,7 @@
   <properties>
 
     <!-- Dependency versions in alphabetic order -->
-    <version.org.hawkular.accounts>1.0.15.Final</version.org.hawkular.accounts>
+    <version.org.hawkular.accounts>1.0.16.Final-SRC-revision-668ca9b2b12166218aa1d3e6cfcb77ca8477a335</version.org.hawkular.accounts>
     <version.org.hawkular.bus>0.7.0.Final</version.org.hawkular.bus>
     <version.org.hawkular.inventory>0.6.0.Final</version.org.hawkular.inventory>
 
