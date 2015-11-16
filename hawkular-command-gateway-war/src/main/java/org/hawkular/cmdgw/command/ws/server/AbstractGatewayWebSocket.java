@@ -18,6 +18,7 @@ package org.hawkular.cmdgw.command.ws.server;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 
 import javax.inject.Inject;
 import javax.websocket.CloseReason;
@@ -155,12 +156,14 @@ public abstract class AbstractGatewayWebSocket {
         // make sure the user is authenticated
         authenticate(request, session);
 
-        @SuppressWarnings("unchecked")
-        WsCommand<BasicMessage> command = (WsCommand<BasicMessage>) wsCommands.getCommand(request.getClass());
-        log.debugf("About to execute command [%s] on message [%s] in session [%s] of [%s]", command.getClass(),
-                request.getClass().getName(), session.getId(), endpoint);
-        WsCommandContext context = commandContextFactory.newCommandContext(session);
-        command.execute(requestWithBinary, context);
+        Class<BasicMessage> requestClass = (Class<BasicMessage>) request.getClass();
+        Collection<WsCommand<BasicMessage>> commands = wsCommands.getCommands(requestClass);
+        for (WsCommand<BasicMessage> command : commands) {
+            log.debugf("About to execute command [%s] on message [%s] in session [%s] of [%s]", command.getClass(),
+                    requestClass.getName(), session.getId(), endpoint);
+            WsCommandContext context = commandContextFactory.newCommandContext(session);
+            command.execute(requestWithBinary, context); // NOTE: only 1 of the collection can read the binary stream
+        }
     }
 
     /**

@@ -42,4 +42,5 @@ public interface Constants {
     Endpoint FEED_COMMAND_QUEUE = new Endpoint(Type.QUEUE, "FeedCommandQueue");
     Endpoint UI_COMMAND_QUEUE = new Endpoint(Type.QUEUE, "UiCommandQueue");
 
+    Endpoint EVENTS_COMMAND_TOPIC = new Endpoint(Type.TOPIC, "EventTopic");
 }
