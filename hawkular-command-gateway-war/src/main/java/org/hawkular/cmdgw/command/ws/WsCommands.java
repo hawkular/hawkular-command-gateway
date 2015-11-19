@@ -16,11 +16,15 @@
  */
 package org.hawkular.cmdgw.command.ws;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 import javax.enterprise.context.ApplicationScoped;
 
 import org.hawkular.bus.common.BasicMessage;
 import org.hawkular.cmdgw.NoCommandForMessageException;
 import org.hawkular.cmdgw.api.EchoRequest;
+import org.hawkular.cmdgw.api.EventDestination;
 import org.hawkular.cmdgw.api.ResourcePathDestination;
 import org.hawkular.cmdgw.api.UiSessionDestination;
 
@@ -39,27 +43,42 @@ public class WsCommands {
     new ResourcePathDestinationWsCommand();
 
     private final EchoCommand echoCommand = new EchoCommand();
-
     private final UiSessionDestinationWsCommand uiSessionDestinationWsCommand = new UiSessionDestinationWsCommand();
+    private final EventDestinationWsCommand eventDestinationWsCommand = new EventDestinationWsCommand();
 
     /**
-     * Returns a {@link WsCommand} that should handle the given {@code requestClass}.
+     * Returns a collection of {@link WsCommand}s that should handle the given {@code requestClass}.
      *
      * @param requestClass the type of a request for which a processing {@link WsCommand} should be found by this method
-     * @return a {@link WsCommand}, never {@code null}
+     * @return a collection of {@link WsCommand} objects, never {@code null}
      * @throws NoCommandForMessageException if no {@link WsCommand} was found
      */
     @SuppressWarnings("unchecked")
-    public <REQ extends BasicMessage> WsCommand<REQ> getCommand(Class<REQ> requestClass)
+    public <REQ extends BasicMessage> Collection<WsCommand<REQ>> getCommands(Class<REQ> requestClass)
             throws NoCommandForMessageException {
+
+        ArrayList<WsCommand<REQ>> results = new ArrayList<>(2);
+
         if (ResourcePathDestination.class.isAssignableFrom(requestClass)) {
-            return (WsCommand<REQ>) resourcePathDestinationWsCommand;
+            results.add((WsCommand<REQ>) resourcePathDestinationWsCommand);
         } else if (UiSessionDestination.class.isAssignableFrom(requestClass)) {
-            return (WsCommand<REQ>) uiSessionDestinationWsCommand;
+            results.add((WsCommand<REQ>) uiSessionDestinationWsCommand);
         } else if (EchoRequest.class.isAssignableFrom(requestClass)) {
-            return (WsCommand<REQ>) echoCommand;
+            results.add((WsCommand<REQ>) echoCommand);
         }
-        // new commands will most probably have to be else-iffed here
-        throw new NoCommandForMessageException("No command found for requestClass [" + requestClass.getName() + "]");
+
+        // some commands may also want the message sent to events
+        if (EventDestination.class.isAssignableFrom(requestClass)) {
+            results.add((WsCommand<REQ>) eventDestinationWsCommand);
+        }
+
+        // new commands will need to be added here
+
+        if (results.isEmpty()) {
+            throw new NoCommandForMessageException(
+                    "No command found for requestClass [" + requestClass.getName() + "]");
+        }
+
+        return results;
     }
 }
