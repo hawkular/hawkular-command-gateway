@@ -34,7 +34,7 @@ public class WsCommandContextFactory {
     @Inject
     private WsEndpoints wsEndpoints;
 
-    @Resource(mappedName = Constants.CONNECTION_FACTORY_JNDI)
+    @Resource(name = Constants.CONNECTION_FACTORY_JNDI)
     private ConnectionFactory connectionFactory;
 
     /**
