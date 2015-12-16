@@ -222,7 +222,7 @@ public class BusEndpointProcessors {
     @Inject
     private BusCommandContextFactory commandContextFactory;
 
-    @Resource(mappedName = Constants.CONNECTION_FACTORY_JNDI)
+    @Resource(name = Constants.CONNECTION_FACTORY_JNDI)
     private ConnectionFactory connectionFactory;
 
     private BiFunction<String, Session, WsSessionListener> feedSessionListenerProducer;
