@@ -21,8 +21,9 @@
 
   <deployment>
     <dependencies>
-      <module name="org.hawkular.nest" />
-      <module name="com.datastax.cassandra" />
+      <module name="org.hawkular.bus" />
+      <module name="org.hawkular.commons.cassandra-driver" />
+      <module name="javaee.api" />
     </dependencies>
   </deployment>
 
