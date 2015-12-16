@@ -36,7 +36,7 @@ public interface Constants {
     /**
      * The JNDI name of the bus connection factory.
      */
-    String CONNECTION_FACTORY_JNDI = "java:/HawkularBusConnectionFactory";
+    String CONNECTION_FACTORY_JNDI = "java:/ConnectionFactory";
 
     // QUEUES AND TOPICS
     Endpoint FEED_COMMAND_QUEUE = new Endpoint(Type.QUEUE, "FeedCommandQueue");
