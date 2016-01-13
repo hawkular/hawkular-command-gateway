@@ -5,6 +5,12 @@
       "javaType": "org.hawkular.cmdgw.api.ResponseStatus",
       "description": "A status of a response",
       "enum": ["OK", "ERROR"]
+    },
+    "responseServerRefreshIndicator": {
+      "type": "string",
+      "javaType": "org.hawkular.cmdgw.api.ServerRefreshIndicator",
+      "description": "If the server needs to be refreshed in order to fully apply recent changes, this tells you what needs to be done. This is helpful when an operation or attribute change requires a reload or restart of the server.",
+      "enum": ["RELOAD-REQUIRED", "RESTART-REQUIRED"]
     }
   },
   "type": "object",
@@ -36,6 +42,10 @@
     "message": {
       "type": "string",
       "description": "A message that further describes the results of the operation."
+    },
+    "serverRefreshIndicator": {
+      "$ref": "#/definitions/responseServerRefreshIndicator",
+      "description": "If the server needs to be refreshed in order to fully apply recent changes, this tells you what needs to be done. This is helpful when an operation or attribute change requires a reload or restart of the server."
     }
   },
   "required": ["resourcePath", "destinationSessionId"]
