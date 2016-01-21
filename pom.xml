@@ -49,6 +49,7 @@
   <modules>
     <module>hawkular-command-gateway-api</module>
     <module>hawkular-command-gateway-war</module>
+    <module>hawkular-command-gateway-itest</module>
   </modules>
 
   <scm>

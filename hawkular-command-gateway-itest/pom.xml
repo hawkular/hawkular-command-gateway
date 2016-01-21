@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright 2015-2016 Red Hat, Inc. and/or its affiliates
+    and other contributors as indicated by the @author tags.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <artifactId>hawkular-command-gateway</artifactId>
+    <groupId>org.hawkular.cmdgw</groupId>
+    <version>0.10.10.Final-SNAPSHOT</version>
+  </parent>
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <artifactId>hawkular-command-gateway-itest</artifactId>
+
+  <properties>
+    <debug.failsafe.argLine/>
+    <debug.wildfly.argLine/>
+    <version.com.squareup.okhttp>2.4.0</version.com.squareup.okhttp>
+
+  </properties>
+
+  <dependencies>
+
+    <dependency>
+      <groupId>org.hawkular.cmdgw</groupId>
+      <artifactId>hawkular-command-gateway-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.testng</groupId>
+      <artifactId>testng</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.squareup.okhttp</groupId>
+      <artifactId>okhttp-ws</artifactId>
+      <version>${version.com.squareup.okhttp}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.hawkular.commons</groupId>
+      <artifactId>hawkular-bus-common</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.hawkular.accounts</groupId>
+      <artifactId>hawkular-accounts-feature-pack</artifactId>
+      <version>${version.org.hawkular.accounts}</version>
+      <type>pom</type>
+      <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.hawkular.accounts</groupId>
+      <artifactId>hawkular-accounts-feature-pack</artifactId>
+      <version>${version.org.hawkular.accounts}</version>
+      <type>zip</type>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!-- because integration tests are run by maven-failsafe-plugin -->
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <profile>
+      <!-- Integration tests -->
+      <id>itest</id>
+      <properties>
+        <hawkular.cmdgw.itest.includes>**/*ITest.class</hawkular.cmdgw.itest.includes>
+        <hawkular.cmdgw.itest.run.dir>${project.build.directory}/${project.artifactId}-${project.version}</hawkular.cmdgw.itest.run.dir>
+        <hawkular.bind.address>127.0.0.1</hawkular.bind.address>
+        <hawkular.port.offset>0</hawkular.port.offset>
+        <!-- $hawkular.management.port must be equal to $hawkular.port.offset + 9990 -->
+        <hawkular.management.port>9990</hawkular.management.port>
+        <hawkular.log>INFO</hawkular.log>
+        <hawkular.log.accounts>INFO</hawkular.log.accounts>
+        <hawkular.log.bus>TRACE</hawkular.log.bus>
+        <hawkular.log.cmdgw>TRACE</hawkular.log.cmdgw>
+        <hawkular.log.availcreator>INFO</hawkular.log.availcreator>
+        <hawkular.log.pinger>INFO</hawkular.log.pinger>
+        <hawkular.log.nest>INFO</hawkular.log.nest>
+        <hawkular.log.datastax.driver>INFO</hawkular.log.datastax.driver>
+        <hawkular.log.liquibase>WARN</hawkular.log.liquibase>
+        <hawkular.log.cassandra>INFO</hawkular.log.cassandra>
+        <hawkular.log.ejb3>WARN</hawkular.log.ejb3>
+        <hawkular.log.rewrite>WARN</hawkular.log.rewrite>
+        <http.log>TRACE</http.log>
+        <http.log.wire>TRACE</http.log.wire>
+      </properties>
+
+      <build>
+        <plugins>
+
+          <plugin>
+            <groupId>org.wildfly.build</groupId>
+            <artifactId>wildfly-server-provisioning-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>server-provisioning</id>
+                <goals>
+                  <goal>build</goal>
+                </goals>
+                <phase>compile</phase>
+                <configuration>
+                  <config-file>server-provisioning.xml</config-file>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+          <!-- further customize standalone.xml -->
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>xml-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>transform-standalone-xml</id>
+                <phase>prepare-package</phase>
+                <goals>
+                  <goal>transform</goal>
+                </goals>
+                <configuration>
+                  <transformationSets>
+                    <!-- standalone.xml -->
+                    <transformationSet>
+                      <dir>${project.build.directory}/${project.artifactId}-${project.version}/standalone/configuration</dir>
+                      <stylesheet>${basedir}/src/test/resources/standalone.xsl</stylesheet>
+                      <includes>
+                        <include>standalone.xml</include>
+                      </includes>
+                      <outputDir>${project.build.directory}/${project.artifactId}-${project.version}/standalone/configuration</outputDir>
+                    </transformationSet>
+                  </transformationSets>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>copy-deployments</id>
+                <phase>test-compile</phase>
+                <goals>
+                  <goal>copy</goal>
+                </goals>
+                <configuration>
+                  <stripVersion>true</stripVersion>
+                  <artifactItems>
+                    <artifactItem>
+                      <groupId>org.hawkular.cmdgw</groupId>
+                      <artifactId>hawkular-command-gateway-war</artifactId>
+                      <version>${project.version}</version>
+                      <type>war</type>
+                    </artifactItem>
+                  </artifactItems>
+                  <outputDirectory>${project.build.directory}/${project.artifactId}-${project.version}/modules/org/hawkular/nest/main/deployments</outputDirectory>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+          <!-- To run a subset of tests, specify the test class paths explicitly. For example:
+               -Dhawkular.agent.itest.includes=**/MyITest.class,**/EchoCommandITest.class -Pitest
+          -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <configuration>
+              <includes>
+                <include>${hawkular.cmdgw.itest.includes}</include>
+              </includes>
+              <systemPropertyVariables>
+                <hawkular.bind.address>${hawkular.bind.address}</hawkular.bind.address>
+                <hawkular.port.offset>${hawkular.port.offset}</hawkular.port.offset>
+                <!-- output over-the-wire traffic -->
+                <org.apache.commons.logging.Log>org.apache.commons.logging.impl.SimpleLog</org.apache.commons.logging.Log>
+                <org.apache.commons.logging.simplelog.log.org.apache.http>${http.log}</org.apache.commons.logging.simplelog.log.org.apache.http>
+                <org.apache.commons.logging.simplelog.log.org.apache.http.wire>${http.log.wire}</org.apache.commons.logging.simplelog.log.org.apache.http.wire>
+                <java.util.logging.config.file>${project.build.testOutputDirectory}/logging.properties</java.util.logging.config.file>
+              </systemPropertyVariables>
+            </configuration>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>integration-test</goal>
+                  <goal>verify</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+
+          <!-- Start WildFly from the folder where the provisionig plugin has prepared it -->
+          <plugin>
+            <groupId>org.wildfly.plugins</groupId>
+            <artifactId>wildfly-maven-plugin</artifactId>
+            <configuration>
+              <jboss-home>${hawkular.cmdgw.itest.run.dir}</jboss-home>
+              <skip>${skipTests}</skip>
+              <startupTimeout>240</startupTimeout>
+              <port>${hawkular.management.port}</port>
+              <javaOpts>
+                <javaOpt>-server</javaOpt>
+                <javaOpt>-Xms64m</javaOpt>
+                <javaOpt>-Xmx512m</javaOpt>
+                <javaOpt>-Djava.net.preferIPv4Stack=true</javaOpt>
+                <javaOpt>-Djboss.modules.system.pkgs=org.jboss.byteman</javaOpt>
+                <javaOpt>-Djava.awt.headless=true</javaOpt>
+                <javaOpt>-Djboss.bind.address=${hawkular.bind.address}</javaOpt>
+                <javaOpt>-Djboss.socket.binding.port-offset=${hawkular.port.offset}</javaOpt>
+                <javaOpt>-Dkeycloak.import=${project.build.directory}/${project.artifactId}-${project.version}/standalone/configuration/hawkular-realm-for-dev.json</javaOpt>
+                <javaOpt>-Dhawkular.log=${hawkular.log}</javaOpt>
+                <javaOpt>-Dhawkular.log.accounts=${hawkular.log.accounts}</javaOpt>
+                <javaOpt>-Dhawkular.log.bus=${hawkular.log.bus}</javaOpt>
+                <javaOpt>-Dhawkular.log.cmdgw=${hawkular.log.cmdgw}</javaOpt>
+                <javaOpt>-Dhawkular.log.nest=${hawkular.log.nest}</javaOpt>
+                <javaOpt>-Dhawkular.log.datastax.driver=${hawkular.log.datastax.driver}</javaOpt>
+                <javaOpt>-Dhawkular.log.liquibase=${hawkular.log.liquibase}</javaOpt>
+                <javaOpt>-Dhawkular.log.cassandra=${hawkular.log.cassandra}</javaOpt>
+                <javaOpt>-Dhawkular.log.ejb3=${hawkular.log.ejb3}</javaOpt>
+                <javaOpt>-Dhawkular.log.rewrite=${hawkular.log.rewrite}</javaOpt>
+                <javaOpt>${debug.wildfly.argLine}</javaOpt>
+              </javaOpts>
+            </configuration>
+            <executions>
+              <execution>
+                <id>start-wildfly</id>
+                <phase>pre-integration-test</phase>
+                <goals>
+                  <goal>start</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>stop-wildfly</id>
+                <phase>post-integration-test</phase>
+                <goals>
+                  <goal>shutdown</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <id>itest.debug</id>
+      <activation>
+        <property>
+          <name>itest.debug</name>
+        </property>
+      </activation>
+      <properties>
+        <debug.failsafe.argLine>-Xdebug -Xrunjdwp:transport=dt_socket,address=5007,server=y,suspend=y
+        </debug.failsafe.argLine>
+        <!-- this can only be a single argument due to the way <javaOpt> works with wildfly maven plugin -->
+        <debug.wildfly.argLine>-Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=n</debug.wildfly.argLine>
+      </properties>
+    </profile>
+  </profiles>
+
+</project>
