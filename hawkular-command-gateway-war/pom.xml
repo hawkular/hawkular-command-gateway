@@ -60,6 +60,11 @@
     </dependency>
 
     <dependency>
+      <groupId>org.keycloak.secretstore</groupId>
+      <artifactId>secret-store-undertow-filter</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>org.hawkular.cmdgw</groupId>
       <artifactId>hawkular-command-gateway-api</artifactId>
       <version>0.10.10.Final-SNAPSHOT</version>
