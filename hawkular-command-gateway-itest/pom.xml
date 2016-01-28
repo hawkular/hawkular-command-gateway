@@ -33,7 +33,6 @@
     <debug.failsafe.argLine/>
     <debug.wildfly.argLine/>
     <version.com.squareup.okhttp>2.4.0</version.com.squareup.okhttp>
-
   </properties>
 
   <dependencies>
@@ -100,6 +99,17 @@
           <!-- because integration tests are run by maven-failsafe-plugin -->
           <skip>true</skip>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
