@@ -17,12 +17,11 @@
     limitations under the License.
 
 -->
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <parent>
     <artifactId>hawkular-command-gateway</artifactId>
     <groupId>org.hawkular.cmdgw</groupId>
-    <version>0.10.10.Final-SNAPSHOT</version>
+    <version>0.10.10.Final</version>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
@@ -30,8 +29,8 @@
   <artifactId>hawkular-command-gateway-itest</artifactId>
 
   <properties>
-    <debug.failsafe.argLine/>
-    <debug.wildfly.argLine/>
+    <debug.failsafe.argLine />
+    <debug.wildfly.argLine />
     <version.com.squareup.okhttp>2.4.0</version.com.squareup.okhttp>
   </properties>
 
