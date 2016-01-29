@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates
+ * Copyright 2015-2016 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -234,9 +234,9 @@ public abstract class AbstractGatewayWebSocket {
                 new GenericErrorResponseBuilder().setThrowable(t).setErrorMessage(errorMessage).build(), null);
         try {
             new WebSocketHelper().sendSync(session, response);
-        } catch (IOException ioe) {
-            log.errorf(ioe, "Failed to send a message [%s] to WebSocket client session [%s] of endpoint [%s]",
-                    response.getBasicMessage().getClass().getName(), session.getId(), endpoint);
+        } catch (Throwable t2) {
+            log.errorFailedToSendErrorResponse(t2, response.getBasicMessage().getClass().getName(), session.getId(),
+                    endpoint);
         }
     }
 

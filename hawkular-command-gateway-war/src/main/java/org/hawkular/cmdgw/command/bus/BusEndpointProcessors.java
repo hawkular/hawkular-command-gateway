@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates
+ * Copyright 2015-2016 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -123,7 +123,7 @@ public class BusEndpointProcessors {
                 try {
                     connectionContextFactory.close();
                 } catch (Exception e) {
-                    log.errorf(e, "Could not close connection context factory: " + getClass().getName());
+                    log.errorCouldNotCloseConnectionContextFactory(e, connectionContextFactory.getClass().getName());
                 }
             }
         }
@@ -274,7 +274,7 @@ public class BusEndpointProcessors {
             };
             wsEndpoints.getUiClientSessions().addWsSessionListenerProducer(uiClientSessionListenerProducer);
         } catch (Exception e) {
-            log.errorf(e, "Could not initialize " + getClass().getName());
+            log.errorCouldNotInitialize(e, this.getClass().getName());
         }
 
     }

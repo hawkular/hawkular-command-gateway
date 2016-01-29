@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates
+ * Copyright 2015-2016 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -174,7 +174,7 @@ public class WebSocketHelper {
                 long size = copyInputToOutput();
                 log.debugf("Finished sending async binary data to client [%s]: size=[%s]", session.getId(), size);
             } catch (Exception e) {
-                log.errorf(e, "Failed sending async binary data to client [%s].", session.getId());
+                log.errorFailedSendingAsyncBinaryData(e, session.getId());
             }
         }
 
