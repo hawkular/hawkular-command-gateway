@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates
+ * Copyright 2015-2016 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -163,4 +163,20 @@ public interface MsgLogger extends BasicLogger {
     @LogMessage(level = Logger.Level.ERROR)
     @Message(id = 35, value = "Could not destroy [%s] of endpoint [%s]")
     void couldNotDestroy(String name, String endpoint, @Cause Throwable t);
+
+    @LogMessage(level = Logger.Level.ERROR)
+    @Message(id = 36, value = "Failed to send error response [%s] to WebSocket client session [%s] of endpoint [%s]")
+    void errorFailedToSendErrorResponse(@Cause Throwable t, String name, String id, String endpoint);
+
+    @LogMessage(level = Logger.Level.ERROR)
+    @Message(id = 37, value = "Failed sending async binary data to client [%s]")
+    void errorFailedSendingAsyncBinaryData(@Cause Throwable t, String id);
+
+    @LogMessage(level = Logger.Level.ERROR)
+    @Message(id = 38, value = "Could not close connection context factory [%s]")
+    void errorCouldNotCloseConnectionContextFactory(@Cause Throwable t, String name);
+
+    @LogMessage(level = Logger.Level.ERROR)
+    @Message(id = 39, value = "Could not initialize [%s]")
+    void errorCouldNotInitialize(@Cause Throwable t, String name);
 }
