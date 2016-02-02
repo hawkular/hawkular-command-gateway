@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,6 +35,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Description;
@@ -55,13 +58,38 @@ import com.squareup.okhttp.ws.WebSocketListener;
 
 import okio.Buffer;
 import okio.BufferedSource;
-
 /**
  * A client for testing WebSocket conversations. A typical usage starts by {@link TestWebSocketClient#builder()}.
  *
  * @author <a href="https://github.com/ppalaga">Peter Palaga</a>
  */
 public class TestWebSocketClient implements Closeable {
+    /**
+     * A matcher for messages having binary attachments.
+     *
+     * @see Builder#expectBinary(String, TypeSafeMatcher)
+     */
+    public static class BinaryAwareMatcher extends PatternMatcher {
+
+        private TypeSafeMatcher<InputStream> binaryMatcher;
+
+        public BinaryAwareMatcher(String pattern, TypeSafeMatcher<InputStream> binaryMatcher) {
+            super(pattern);
+            this.binaryMatcher = binaryMatcher;
+        }
+
+        @Override
+        public void describeTo(Description description) {
+            super.describeTo(description);
+            description.appendDescriptionOf(binaryMatcher);
+        }
+
+        @Override
+        public boolean matches(ReusableBuffer actual, TestListener testListener) {
+            return super.matches(actual, testListener) && binaryMatcher.matches(actual.getBinaryPart());
+        }
+
+    }
 
     /**
      * @see TestWebSocketClient#builder()
@@ -77,15 +105,32 @@ public class TestWebSocketClient implements Closeable {
             return new TestWebSocketClient(request, listener);
         }
         /**
-         * @param expectedRegex a text message regular expression to match
+         * @param textPattern a regular expression
+         * @param binaryMatcher a custom matcher to check the incoming binary attachment
          * @return this builder
          */
-        public Builder expectRegex(String expectedRegex) {
-            ExpectedMessage expectedMessage = new ExpectedMessage(new PatternMatcher(expectedRegex),
+        public Builder expectBinary(String textPattern, TypeSafeMatcher<InputStream> binaryMatcher) {
+            ExpectedMessage expectedMessage = new ExpectedMessage(new BinaryAwareMatcher(textPattern, binaryMatcher),
+                            CoreMatchers.equalTo(PayloadType.BINARY), null, null);
+            expectedMessages.add(expectedMessage);
+            return this;
+        }
+
+        public Builder expectGenericSuccess(String feedId) {
+            ExpectedMessage expectedMessage = new ExpectedMessage(
+                    new PatternMatcher("\\QGenericSuccessResponse={\"message\":"
+                            + "\"The request has been forwarded to feed ["
+                            + feedId + "] (\\E.*"),
                     CoreMatchers.equalTo(PayloadType.TEXT), null, null);
             expectedMessages.add(expectedMessage);
             return this;
         }
+
+        public Builder expectMessage(ExpectedMessage expectedMessage) {
+            expectedMessages.add(expectedMessage);
+            return this;
+        }
+
         /**
          * @param expectedTextMessage a plain text message to compare (rather than a regular expression)
          * @return this builder
@@ -94,6 +139,17 @@ public class TestWebSocketClient implements Closeable {
             ExpectedMessage expectedMessage =
                     new ExpectedMessage(new PatternMatcher("\\Q" + expectedTextMessage + "\\E.*"),
                             CoreMatchers.equalTo(PayloadType.TEXT), null, null);
+            expectedMessages.add(expectedMessage);
+            return this;
+        }
+
+        /**
+         * @param expectedRegex a text message regular expression to match
+         * @return this builder
+         */
+        public Builder expectRegex(String expectedRegex) {
+            ExpectedMessage expectedMessage = new ExpectedMessage(new PatternMatcher(expectedRegex),
+                    CoreMatchers.equalTo(PayloadType.TEXT), null, null);
             expectedMessages.add(expectedMessage);
             return this;
         }
@@ -249,7 +305,7 @@ public class TestWebSocketClient implements Closeable {
 
         /**
          * @param pattern a regular expression to match the text part of the incoming message. The pattern may contain
-         *                Mustache placeholders (such as {@code sessionId}) that will be resolved against an instance of
+         *                placeholders (such as {@code sessionId}) that will be resolved against an instance of
          *                {@link TestListener}.
          */
         public PatternMatcher(String pattern) {
@@ -257,7 +313,44 @@ public class TestWebSocketClient implements Closeable {
             this.pattern = pattern;
         }
 
+        private String resolvePlaceHolders(String stringPattern, Object context) {
+            String method = "";
+            Class<?> ctxClass = context.getClass();
+
+            try {
+                String placeholderPattern = "(\\Q{{\\E[[a-zA-Z0-9]| |\t]+?\\Q}}\\E)";
+                Pattern rg = Pattern.compile(placeholderPattern);
+                java.util.regex.Matcher m = rg.matcher(stringPattern);
+                while (m.find()) {
+                    method = m.group();
+                    method = method.replaceAll("\\{", "").replaceAll("\\}", "");
+                    method = "get" + method.substring(0, 1).toUpperCase() + method.substring(1);
+                    Method getter = ctxClass.getDeclaredMethod(method);
+                    String p = (String) getter.invoke(context);
+                    stringPattern = stringPattern.replaceAll(Pattern.quote(m.group()), p);
+                }
+                return stringPattern;
+            } catch (NoSuchMethodException e) {
+                throw new RuntimeException("Method " + method + " not found in context "+ctxClass.getName());
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException("Method " + method + " not found in context "+ctxClass.getName());
+            } catch (java.lang.reflect.InvocationTargetException e) {
+                throw new RuntimeException("Method " + method + " not found in context "+ctxClass.getName());
+            }
+        }
+
         /**
+         * Resolve placeholders (such as {@code sessionId}) against the given instance of
+         * {@link TestListener}
+         *
+         * @return the resolved and compiled {@link Pattern}
+         */
+        protected Pattern compile(TestListener testListener) {
+            String resolvedPattern = testListener == null ? pattern : resolvePlaceHolders(pattern, testListener);
+            return Pattern.compile(resolvedPattern);
+        }
+
+        /*
          * @see org.hamcrest.SelfDescribing#describeTo(org.hamcrest.Description)
          */
         @Override
@@ -267,7 +360,7 @@ public class TestWebSocketClient implements Closeable {
 
         @Override
         public boolean matches(ReusableBuffer actual, TestListener testListener) {
-            return Pattern.compile(pattern).matcher(actual.getTextPart()).matches();
+            return compile(testListener).matcher(actual.getTextPart()).matches();
         }
 
         @Override
@@ -588,6 +681,36 @@ public class TestWebSocketClient implements Closeable {
                 return true;
             }
             return false;
+        }
+
+    }
+
+    /**
+     * Asserts that the given {@link InputStream} is a {@link ZipInputStream} with at leat one {@link ZipEntry}.
+     */
+    public static class ZipWithOneEntryMatcher extends TypeSafeMatcher<InputStream> {
+
+        /** @see org.hamcrest.SelfDescribing#describeTo(org.hamcrest.Description) */
+        @Override
+        public void describeTo(Description description) {
+            description.appendText("expected ZIP stream");
+        }
+
+        /** @see org.hamcrest.TypeSafeMatcher#matchesSafely(java.lang.Object) */
+        @Override
+        protected boolean matchesSafely(InputStream in) {
+
+            try (ZipInputStream zipInputStream = new ZipInputStream(in)) {
+                ZipEntry entry = zipInputStream.getNextEntry();
+                // it should be enough to assert that it's a valid ZIP file
+                // when the ZIP is not valid, the entry will be null
+                Assert.assertNotNull(entry);
+                Assert.assertNotNull(entry.getName());
+                // if we have a valid ZIP, we should be able to get at least one entry of it
+                return true;
+            } catch (IOException e) {
+                throw new RuntimeException();
+            }
         }
 
     }
