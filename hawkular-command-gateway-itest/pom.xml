@@ -21,7 +21,7 @@
   <parent>
     <artifactId>hawkular-command-gateway</artifactId>
     <groupId>org.hawkular.cmdgw</groupId>
-    <version>0.10.11.Final-SNAPSHOT</version>
+    <version>0.10.11.Final</version>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
