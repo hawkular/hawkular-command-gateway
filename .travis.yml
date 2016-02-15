@@ -16,6 +16,8 @@ notifications:
     on_success: change
 install:
 - mvn -s .travis.maven.settings.xml -version -B
+# unshallow is needed by license-maven-plugin
+- git fetch origin --unshallow
 script:
 - mvn -s .travis.maven.settings.xml verify -Pitest
 env:
