@@ -62,6 +62,12 @@
     </dependency>
 
     <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
       <groupId>org.hawkular.accounts</groupId>
       <artifactId>hawkular-accounts-feature-pack</artifactId>
       <version>${version.org.hawkular.accounts}</version>
