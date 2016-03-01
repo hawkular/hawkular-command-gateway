@@ -125,7 +125,7 @@
       <id>itest</id>
       <properties>
         <hawkular.cmdgw.itest.includes>**/*ITest.class</hawkular.cmdgw.itest.includes>
-        <hawkular.cmdgw.itest.run.dir>${project.build.directory}/${project.artifactId}-${project.version}</hawkular.cmdgw.itest.run.dir>
+        <hawkular.cmdgw.itest.run.dir>${project.build.directory}/${project.build.finalName}</hawkular.cmdgw.itest.run.dir>
         <hawkular.bind.address>127.0.0.1</hawkular.bind.address>
         <hawkular.port.offset>0</hawkular.port.offset>
         <!-- $hawkular.management.port must be equal to $hawkular.port.offset + 9990 -->
@@ -181,12 +181,12 @@
                   <transformationSets>
                     <!-- standalone.xml -->
                     <transformationSet>
-                      <dir>${project.build.directory}/${project.artifactId}-${project.version}/standalone/configuration</dir>
+                      <dir>${project.build.directory}/${project.build.finalName}/standalone/configuration</dir>
                       <stylesheet>${basedir}/src/test/resources/standalone.xsl</stylesheet>
                       <includes>
                         <include>standalone.xml</include>
                       </includes>
-                      <outputDir>${project.build.directory}/${project.artifactId}-${project.version}/standalone/configuration</outputDir>
+                      <outputDir>${project.build.directory}/${project.build.finalName}/standalone/configuration</outputDir>
                     </transformationSet>
                   </transformationSets>
                 </configuration>
@@ -214,7 +214,7 @@
                       <type>war</type>
                     </artifactItem>
                   </artifactItems>
-                  <outputDirectory>${project.build.directory}/${project.artifactId}-${project.version}/modules/org/hawkular/nest/main/deployments</outputDirectory>
+                  <outputDirectory>${project.build.directory}/${project.build.finalName}/modules/system/layers/hawkular/org/hawkular/nest/main/deployments</outputDirectory>
                 </configuration>
               </execution>
             </executions>
@@ -268,7 +268,7 @@
                 <javaOpt>-Djava.awt.headless=true</javaOpt>
                 <javaOpt>-Djboss.bind.address=${hawkular.bind.address}</javaOpt>
                 <javaOpt>-Djboss.socket.binding.port-offset=${hawkular.port.offset}</javaOpt>
-                <javaOpt>-Dkeycloak.import=${project.build.directory}/${project.artifactId}-${project.version}/standalone/configuration/hawkular-realm-for-dev.json</javaOpt>
+                <javaOpt>-Dkeycloak.import=${project.build.directory}/${project.build.finalName}/standalone/configuration/hawkular-realm-for-dev.json</javaOpt>
                 <javaOpt>-Dhawkular.log=${hawkular.log}</javaOpt>
                 <javaOpt>-Dhawkular.log.accounts=${hawkular.log.accounts}</javaOpt>
                 <javaOpt>-Dhawkular.log.bus=${hawkular.log.bus}</javaOpt>
