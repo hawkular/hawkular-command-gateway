@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.hawkular</groupId>
     <artifactId>hawkular-parent</artifactId>
-    <version>36</version>
+    <version>41</version>
   </parent>
 
   <groupId>org.hawkular.cmdgw</groupId>
@@ -66,9 +66,8 @@
   <properties>
 
     <!-- Dependency versions in alphabetic order -->
-    <version.org.hawkular.accounts>2.0.22.Final</version.org.hawkular.accounts>
-    <version.org.hawkular.commons>0.4.0.Final</version.org.hawkular.commons>
-    <version.org.hawkular.inventory>0.13.0.Final</version.org.hawkular.inventory>
+    <version.org.hawkular.accounts>2.0.25.Final</version.org.hawkular.accounts>
+    <version.org.hawkular.commons>0.6.0.Final</version.org.hawkular.commons>
 
     <!-- Plugin versions in alphabetic order -->
     <plugin.version.org.jsonschema2pojo>0.4.14</plugin.version.org.jsonschema2pojo>
@@ -97,9 +96,9 @@
       </dependency>
 
       <dependency>
-        <groupId>org.hawkular.inventory</groupId>
-        <artifactId>hawkular-inventory-json-helper</artifactId>
-        <version>${version.org.hawkular.inventory}</version>
+        <groupId>org.hawkular.commons</groupId>
+        <artifactId>hawkular-inventory-paths</artifactId>
+        <version>${version.org.hawkular.commons}</version>
       </dependency>
 
       <dependency>
