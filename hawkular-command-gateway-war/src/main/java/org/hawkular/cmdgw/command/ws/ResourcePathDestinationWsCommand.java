@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Red Hat, Inc. and/or its affiliates
+ * Copyright 2015-2016 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,7 +30,7 @@ import org.hawkular.cmdgw.api.ResourcePathDestination;
 import org.hawkular.cmdgw.command.ws.server.WebSocketHelper;
 import org.hawkular.cmdgw.log.GatewayLoggers;
 import org.hawkular.cmdgw.log.MsgLogger;
-import org.hawkular.inventory.api.model.CanonicalPath;
+import org.hawkular.inventory.paths.CanonicalPath;
 
 /**
  * A {@link WsCommand} that transfers messages implementing {@link ResourcePathDestination} from a UI WebSocket to a bus
