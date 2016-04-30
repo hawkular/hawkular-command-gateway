@@ -26,15 +26,21 @@ import java.io.Reader;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -46,24 +52,112 @@ import org.hamcrest.TypeSafeMatcher;
 import org.hawkular.bus.common.BasicMessageWithExtraData;
 import org.hawkular.cmdgw.api.ApiDeserializer;
 import org.hawkular.cmdgw.api.WelcomeResponse;
+import org.hawkular.cmdgw.ws.test.TestWebSocketClient.ActualEvent.ActualClose;
+import org.hawkular.cmdgw.ws.test.TestWebSocketClient.ActualEvent.ActualFailure;
+import org.hawkular.cmdgw.ws.test.TestWebSocketClient.ActualEvent.ActualMessage;
+import org.hawkular.cmdgw.ws.test.TestWebSocketClient.ExpectedEvent.ExpectedMessage;
 import org.testng.Assert;
 
+import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
+import com.squareup.okhttp.ResponseBody;
 import com.squareup.okhttp.ws.WebSocket;
-import com.squareup.okhttp.ws.WebSocket.PayloadType;
 import com.squareup.okhttp.ws.WebSocketCall;
 import com.squareup.okhttp.ws.WebSocketListener;
 
 import okio.Buffer;
 import okio.BufferedSource;
+
 /**
  * A client for testing WebSocket conversations. A typical usage starts by {@link TestWebSocketClient#builder()}.
  *
  * @author <a href="https://github.com/ppalaga">Peter Palaga</a>
  */
 public class TestWebSocketClient implements Closeable {
+
+    public abstract static class ActualEvent {
+        public static class ActualOpen extends ActualEvent {
+            public ActualOpen(TestListener testListener, int index, WebSocket webSocket, Response response) {
+                super(testListener, index);
+                this.webSocket = webSocket;
+                this.response = response;
+            }
+            private final WebSocket webSocket;
+            private final Response response;
+            public WebSocket getWebSocket() {
+                return webSocket;
+            }
+            public Response getResponse() {
+                return response;
+            }
+        }
+        public static class ActualFailure extends ActualEvent {
+            public ActualFailure(TestListener testListener, int index, IOException exception, Response response) {
+                super(testListener, index);
+                this.exception = exception;
+                this.response = response;
+            }
+            private final IOException exception;
+            private final Response response;
+            public IOException getException() {
+                return exception;
+            }
+            public Response getResponse() {
+                return response;
+            }
+        }
+        public static class ActualMessage extends ActualEvent {
+            private final ResponseBody body;
+
+            public ActualMessage(TestListener testListener, int index, ResponseBody body) {
+                super(testListener, index);
+                this.body = body;
+            }
+
+            public ResponseBody getBody() {
+                return body;
+            }
+        }
+        public static class ActualClose extends ActualEvent {
+            private final int code;
+            private final String reason;
+            public ActualClose(TestListener testListener, int index, int code, String reason) {
+                super(testListener, index);
+                this.code = code;
+                this.reason = reason;
+            }
+            public int getCode() {
+                return code;
+            }
+            public String getReason() {
+                return reason;
+            }
+        }
+
+        private final int index;
+        private final TestListener testListener;
+        public ActualEvent(TestListener testListener, int index) {
+            super();
+            this.testListener = testListener;
+            this.index = index;
+        }
+
+        public int getIndex() {
+            return index;
+        }
+
+        public TestListener getTestListener() {
+            return testListener;
+        }
+    }
+
+    public interface Answer {
+        void schedule(final ExecutorService executor, final WebSocket webSocket);
+    }
+
     /**
      * A matcher for messages having binary attachments.
      *
@@ -96,50 +190,52 @@ public class TestWebSocketClient implements Closeable {
      */
     public static class Builder {
 
-        private final List<ExpectedMessage> expectedMessages = new ArrayList<>();
+        private String authentication = AbstractCommandITest.authHeader;
 
-        private Request request;
+        private final List<ExpectedEvent> expectedEvents = new ArrayList<>();
+
+        private String url;
+
+        public Builder authentication(String authentication) {
+            this.authentication = authentication;
+            return this;
+        }
 
         public TestWebSocketClient build() {
-            TestListener listener = new TestListener(Collections.unmodifiableList(expectedMessages));
+            com.squareup.okhttp.Request.Builder rb = new Request.Builder().url(url);
+            if (authentication != null) {
+                rb.addHeader("Authorization", authentication);
+            }
+            Request request = rb.build();
+            TestListener listener = new TestListener(Collections.unmodifiableList(expectedEvents));
             return new TestWebSocketClient(request, listener);
         }
+
         /**
          * @param textPattern a regular expression
          * @param binaryMatcher a custom matcher to check the incoming binary attachment
          * @return this builder
          */
         public Builder expectBinary(String textPattern, TypeSafeMatcher<InputStream> binaryMatcher) {
-            ExpectedMessage expectedMessage = new ExpectedMessage(new BinaryAwareMatcher(textPattern, binaryMatcher),
-                            CoreMatchers.equalTo(PayloadType.BINARY), null, null);
-            expectedMessages.add(expectedMessage);
+            ExpectedEvent expectedEvent =
+                    new ExpectedMessage(new BinaryAwareMatcher(textPattern, binaryMatcher),
+                            CoreMatchers.equalTo(WebSocket.BINARY), null);
+            expectedEvents.add(expectedEvent);
             return this;
         }
 
         public Builder expectGenericSuccess(String feedId) {
-            ExpectedMessage expectedMessage = new ExpectedMessage(
+            ExpectedEvent expectedEvent = new ExpectedMessage(
                     new PatternMatcher("\\QGenericSuccessResponse={\"message\":"
                             + "\"The request has been forwarded to feed ["
                             + feedId + "] (\\E.*"),
-                    CoreMatchers.equalTo(PayloadType.TEXT), null, null);
-            expectedMessages.add(expectedMessage);
+                    CoreMatchers.equalTo(WebSocket.TEXT), null);
+            expectedEvents.add(expectedEvent);
             return this;
         }
 
-        public Builder expectMessage(ExpectedMessage expectedMessage) {
-            expectedMessages.add(expectedMessage);
-            return this;
-        }
-
-        /**
-         * @param expectedTextMessage a plain text message to compare (rather than a regular expression)
-         * @return this builder
-         */
-        public Builder expectText(String expectedTextMessage) {
-            ExpectedMessage expectedMessage =
-                    new ExpectedMessage(new PatternMatcher("\\Q" + expectedTextMessage + "\\E.*"),
-                            CoreMatchers.equalTo(PayloadType.TEXT), null, null);
-            expectedMessages.add(expectedMessage);
+        public Builder expectMessage(ExpectedEvent expectedEvent) {
+            expectedEvents.add(expectedEvent);
             return this;
         }
 
@@ -148,26 +244,41 @@ public class TestWebSocketClient implements Closeable {
          * @return this builder
          */
         public Builder expectRegex(String expectedRegex) {
-            ExpectedMessage expectedMessage = new ExpectedMessage(new PatternMatcher(expectedRegex),
-                    CoreMatchers.equalTo(PayloadType.TEXT), null, null);
-            expectedMessages.add(expectedMessage);
+            ExpectedEvent expectedEvent = new ExpectedMessage(new PatternMatcher(expectedRegex),
+                    CoreMatchers.equalTo(WebSocket.TEXT), null);
+            expectedEvents.add(expectedEvent);
+            return this;
+        }
+        /**
+         * @param expectedTextMessage a plain text message to compare (rather than a regular expression)
+         * @return this builder
+         */
+        public Builder expectText(String expectedTextMessage) {
+            return expectText(expectedTextMessage, null);
+        }
+
+        public Builder expectText(String expectedTextMessage, Answer messageAnswer) {
+            ExpectedEvent expectedEvent =
+                    new ExpectedMessage(new PatternMatcher("\\Q" + expectedTextMessage + "\\E.*"),
+                            CoreMatchers.equalTo(WebSocket.TEXT), messageAnswer);
+            expectedEvents.add(expectedEvent);
+            return this;
+        }
+
+        /**
+         * @param answer the text message to send out if the welcome came as expected
+         * @param attachment bits to send out as a binary attachment of {@code answer}
+         * @return this builder
+         */
+        public Builder expectWelcome(MessageAnswer messageAnswer) {
+            ExpectedEvent expectedEvent = new ExpectedMessage(new WelcomeMatcher(),
+                    CoreMatchers.equalTo(WebSocket.TEXT), messageAnswer);
+            expectedEvents.add(expectedEvent);
             return this;
         }
 
         public Builder expectWelcome(String answer) {
-            return expectWelcome(answer, null);
-        }
-
-        /**
-         * @param answer     the text message to send out if the welcome came as expected
-         * @param attachment bits to send out as a binary attachment of {@code answer}
-         * @return this builder
-         */
-        public Builder expectWelcome(String answer, URL attachment) {
-            ExpectedMessage expectedMessage = new ExpectedMessage(new WelcomeMatcher(),
-                    CoreMatchers.equalTo(PayloadType.TEXT), answer, attachment);
-            expectedMessages.add(expectedMessage);
-            return this;
+            return expectWelcome(new MessageAnswer(answer));
         }
 
         /**
@@ -175,83 +286,287 @@ public class TestWebSocketClient implements Closeable {
          * @return this builder
          */
         public Builder url(String url) {
-            this.request = new Request.Builder().url(url).build();
+            this.url = url;
             return this;
         }
 
+
     }
 
-    /**
-     * A pair of {@link Matcher}s for checking the incoming messages optionally bundled with a text and binary answer to
-     * send out if the incoming message matched the expectations.
-     */
-    public static class ExpectedMessage {
+    public abstract static class ExpectedEvent {
+        /**
+         * A pair of {@link Matcher}s for checking the incoming messages optionally bundled with a text and binary answer to
+         * send out if the incoming message matched the expectations.
+         */
+        public static class ExpectedMessage extends ExpectedEvent {
 
+            protected final WebSocketArgumentMatcher<ReusableBuffer> inMessageMatcher;
+            private final org.hamcrest.Matcher<MediaType> inTypeMatcher;
+
+
+            public ExpectedMessage(WebSocketArgumentMatcher<ReusableBuffer> inMessageMatcher,
+                    org.hamcrest.Matcher<MediaType> inTypeMatcher, Answer answer) {
+                super(ActualMessage.class, answer);
+                this.inMessageMatcher = inMessageMatcher;
+                this.inTypeMatcher = inTypeMatcher;
+            }
+
+            public MessageReport match(ActualEvent actualEvent) {
+                if (actualEvent instanceof ActualMessage) {
+                    ActualMessage msg = (ActualMessage) actualEvent;
+                    ResponseBody body = msg.getBody();
+                    try {
+                        BufferedSource payload = body.source();
+                        MediaType type = body.contentType();
+                        ReusableBuffer message = new ReusableBuffer(payload);
+
+
+                        Description description = new StringDescription();
+                        boolean fail = false;
+                        if (!inMessageMatcher.matches(message, actualEvent.getTestListener())) {
+                            description
+                                    .appendText("Expected: ")
+                                    .appendDescriptionOf(inMessageMatcher)
+                                    .appendText("\n     but: ");
+                            inMessageMatcher.describeMismatch(message, description);
+                            fail = true;
+                        }
+                        if (!inTypeMatcher.matches(type)) {
+                            description
+                                    .appendText("Expected: ")
+                                    .appendDescriptionOf(inTypeMatcher)
+                                    .appendText("\n     but: ");
+                            inTypeMatcher.describeMismatch(type, description);
+                            fail = true;
+                        }
+
+                        if (fail) {
+                            return new MessageReport(new AssertionError(description.toString()), actualEvent.getIndex());
+                        } else {
+                            return MessageReport.passed(actualEvent.getIndex());
+                        }
+                    } catch (IOException e) {
+                        return new MessageReport(e, actualEvent.getIndex());
+                    }
+                } else {
+                    return unexpectedType(actualEvent);
+                }
+
+            }
+
+
+        }
+        public static class ExpectedAny extends ExpectedEvent {
+            private static Set<Class<? extends ActualEvent>> collectExpectedTypes(List<ExpectedEvent> expectedEvents) {
+                Set<Class<? extends ActualEvent>> result = new LinkedHashSet<>();
+                for (ExpectedEvent expectedEvent : expectedEvents) {
+                    result.addAll(expectedEvent.getExpectedTypes());
+                }
+                return result;
+
+            }
+
+            private final List<ExpectedEvent> expectedEvents;
+
+            public ExpectedAny(List<ExpectedEvent> expectedEvents) {
+                super(collectExpectedTypes(expectedEvents), null);
+                this.expectedEvents = expectedEvents;
+            }
+
+            @Override
+            public MessageReport match(ActualEvent actualEvent) {
+                for (ExpectedEvent expectedEvent : expectedEvents) {
+                    if (expectedEvent.getExpectedTypes().contains(actualEvent.getClass())) {
+                        return expectedEvent.match(actualEvent);
+                    }
+                }
+                return unexpectedType(actualEvent);
+            }
+            public void scheduleAnswer(ActualEvent actualEvent, ExecutorService executor, WebSocket webSocket) {
+
+                for (ExpectedEvent expectedEvent : expectedEvents) {
+                    if (expectedEvent.getExpectedTypes().contains(actualEvent.getClass())) {
+                        expectedEvent.scheduleAnswer(actualEvent, executor, webSocket);
+                    }
+                }
+            }
+        }
+        public static class ExpectedClose extends ExpectedEvent {
+            private final int code;
+            private final String reason;
+
+            public ExpectedClose(int code, String reason) {
+                super(ActualClose.class, null);
+                this.code = code;
+                this.reason = reason;
+            }
+
+            /** @see org.hawkular.cmdgw.ws.test.TestWebSocketClient.ExpectedEvent#match(org.hawkular.cmdgw.ws.test.TestWebSocketClient.ActualEvent) */
+            @Override
+            public MessageReport match(ActualEvent actualEvent) {
+                if (actualEvent instanceof ActualClose) {
+                    ActualClose actualClose = (ActualClose) actualEvent;
+                    if (this.code == actualClose.getCode() && Objects.equals(this.reason, actualClose.getReason())) {
+                        return MessageReport.passed(actualEvent.getIndex());
+                    } else {
+                        Description description = new StringDescription() //
+                        .appendText("Expected: code ") //
+                        .appendValue(this.code) //
+                        .appendText(" and reason ") //
+                        .appendValue(this.reason) //
+                        .appendText("\n     but got: code ") //
+                        .appendValue(code) //
+                        .appendText(" and reason ") //
+                        .appendValue(reason);
+                        return new MessageReport(new AssertionError(description.toString()), actualEvent.getIndex());
+                    }
+                } else {
+                    return unexpectedType(actualEvent);
+                }
+            }
+
+            public int getCode() {
+                return code;
+            }
+
+            public String getReason() {
+                return reason;
+            }
+        }
+        public static class ExpectedFailure extends ExpectedEvent {
+            public static final ExpectedEvent UNAUTHORIZED = new ExpectedFailure(401, "Unauthorized");
+            private final int code;
+            private final String message;
+            public ExpectedFailure(int code, String message) {
+                super(ActualFailure.class, null);
+                this.code = code;
+                this.message = message;
+            }
+
+            public MessageReport match(ActualEvent actualEvent) {
+                if (actualEvent instanceof ActualFailure) {
+                    ActualFailure actualFailure = (ActualFailure) actualEvent;
+                    Response response = actualFailure.getResponse();
+                    if (this.code == response.code() && Objects.equals(this.message, response.message())) {
+                        return MessageReport.passed(actualEvent.getIndex());
+                    } else {
+                        Description description = new StringDescription() //
+                        .appendText("Expected a failure with: code ") //
+                        .appendValue(this.code) //
+                        .appendText(" and message ") //
+                        .appendValue(this.message) //
+                        .appendText("\n     but got: code ") //
+                        .appendValue(response.code()) //
+                        .appendText(" and message ") //
+                        .appendValue(response.message());
+                        return new MessageReport(new AssertionError(description.toString()), actualEvent.getIndex());
+                    }
+                } else {
+                    return unexpectedType(actualEvent);
+                }
+            }
+        }
+        public static ExpectedAny anyOf(ExpectedEvent... events) {
+            return new ExpectedAny(Arrays.asList(events));
+        }
+        protected final Set<Class<? extends ActualEvent>> expectedTypes;
+        protected final Answer answer;
+
+        public ExpectedEvent(Class<? extends ActualEvent> expectedType, Answer answer) {
+            this(Collections.singleton(expectedType), answer);
+        }
+
+        public ExpectedEvent(Set<Class<? extends ActualEvent>> expectedTypes, Answer answer) {
+            super();
+            this.expectedTypes = expectedTypes;
+            this.answer = answer;
+        }
+        public Set<Class<? extends ActualEvent>> getExpectedTypes() {
+            return expectedTypes;
+        }
+
+        protected MessageReport unexpectedType(ActualEvent actualEvent) {
+            final String msg = "Expected one of [" + getExpectedTypes()
+                    + "] found [" + actualEvent.getClass().getName() +"]";
+            log.fine(msg);
+            return new MessageReport(new IllegalStateException(msg), actualEvent.getIndex());
+        }
+
+        public abstract MessageReport match(ActualEvent actualEvent);
+
+
+        public void scheduleAnswer(ActualEvent actualEvent, ExecutorService executor, WebSocket webSocket) {
+            if (answer != null) {
+                answer.schedule(executor, webSocket);
+            } else {
+                log.fine("No answer to send for message[" + actualEvent.getIndex() + "]");
+            }
+        }
+    }
+
+    public static class MessageAnswer implements Answer {
         private final URL binaryAnswer;
 
-        protected final WebSocketArgumentMatcher<ReusableBuffer> inMessageMatcher;
-        private final org.hamcrest.Matcher<PayloadType> inTypeMatcher;
+        private final long sleepAfterAnswerMs;
         private final String textAnswer;
-
-        public ExpectedMessage(WebSocketArgumentMatcher<ReusableBuffer> inMessageMatcher,
-                               org.hamcrest.Matcher<PayloadType> inTypeMatcher, String textAnswer, URL binaryAnswer) {
+        public MessageAnswer(String textAnswer) {
+            this(textAnswer, null, 0);
+        }
+        public MessageAnswer(String textAnswer, URL binaryAnswer, long sleepAfterAnswerMs) {
             super();
-            this.inMessageMatcher = inMessageMatcher;
-            this.inTypeMatcher = inTypeMatcher;
             this.textAnswer = textAnswer;
             this.binaryAnswer = binaryAnswer;
-        }
-
-        public MessageReport assertMatch(TestListener testListener, int index, ReusableBuffer message,
-                                         PayloadType type) {
-            Description description = new StringDescription();
-            boolean fail = false;
-            if (!inMessageMatcher.matches(message, testListener)) {
-                description
-                        .appendText("Expected: ")
-                        .appendDescriptionOf(inMessageMatcher)
-                        .appendText("\n     but: ");
-                inMessageMatcher.describeMismatch(message, description);
-                fail = true;
-            }
-            if (!inTypeMatcher.matches(type)) {
-                description
-                        .appendText("Expected: ")
-                        .appendDescriptionOf(inTypeMatcher)
-                        .appendText("\n     but: ");
-                inTypeMatcher.describeMismatch(type, description);
-                fail = true;
-            }
-
-            if (fail) {
-                return new MessageReport(new AssertionError(description.toString()), index);
-            } else {
-                return MessageReport.passed(index);
-            }
+            this.sleepAfterAnswerMs = sleepAfterAnswerMs;
         }
 
         /**
-         * @return a binary attachment to send out with {@link #getTextAnswer()} if the incoming message matched the
-         * expectations
+         * @param webSocket
+         * @return
          */
-        public URL getBinaryAnswer() {
-            return binaryAnswer;
+        public void schedule(final ExecutorService executor, final WebSocket webSocket) {
+            executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try (Buffer b1 = new Buffer()) {
+                        if (textAnswer != null) {
+                            log.fine("Sending over WebSocket: " + textAnswer);
+                            b1.writeUtf8(textAnswer);
+                        }
+                        if (binaryAnswer != null) {
+                            try (InputStream in = binaryAnswer.openStream()) {
+                                int b;
+                                while ((b = in.read()) != -1) {
+                                    b1.writeByte(b);
+                                    // System.out.println("Writing binary data");
+                                }
+                            }
+                        }
+                        RequestBody body = RequestBody.create(binaryAnswer == null ? WebSocket.TEXT : WebSocket.BINARY,
+                                b1.readByteArray());
+                        webSocket.sendMessage(body);
+
+                        if (sleepAfterAnswerMs > 0) {
+                            log.fine("About to sleep for [" + sleepAfterAnswerMs + "] ms");
+                            try {
+                                Thread.sleep(sleepAfterAnswerMs);
+                            } catch (InterruptedException e) {
+                                log.fine("Interrupted while sleeping for [" + sleepAfterAnswerMs + "] ms");
+                            }
+                            log.fine("Woke up after [" + sleepAfterAnswerMs + "] ms");
+                        } else {
+                            log.fine("No sleep configured");
+                        }
+                    } catch (IOException e) {
+                        throw new RuntimeException("Unable to send message", e);
+                    }
+                }
+            });
         }
 
-        /**
-         * @return a text message to send out if the incoming message matched the expectations
-         */
-        public String getTextAnswer() {
-            return textAnswer;
-        }
-
-        public boolean hasAnswer() {
-            return textAnswer != null || binaryAnswer != null;
-        }
     }
 
     /**
-     * Some basic data about how a given message fulfilled the expectations set in {@link ExpectedMessage}.
+     * Some basic data about how a given message fulfilled the expectations set in {@link ExpectedEvent}.
      */
     public static class MessageReport {
 
@@ -283,7 +598,7 @@ public class TestWebSocketClient implements Closeable {
         }
 
         /**
-         * @return {@code true} if the received message matched the expectations set in {@link ExpectedMessage}.
+         * @return {@code true} if the received message matched the expectations set in {@link ExpectedEvent}.
          */
         public boolean passed() {
             return this.throwable == null;
@@ -305,43 +620,16 @@ public class TestWebSocketClient implements Closeable {
 
         /**
          * @param pattern a regular expression to match the text part of the incoming message. The pattern may contain
-         *                placeholders (such as {@code sessionId}) that will be resolved against an instance of
-         *                {@link TestListener}.
+         *            placeholders (such as {@code sessionId}) that will be resolved against an instance of
+         *            {@link TestListener}.
          */
         public PatternMatcher(String pattern) {
             super();
             this.pattern = pattern;
         }
 
-        private String resolvePlaceHolders(String stringPattern, Object context) {
-            String method = "";
-            Class<?> ctxClass = context.getClass();
-
-            try {
-                String placeholderPattern = "(\\Q{{\\E[[a-zA-Z0-9]| |\t]+?\\Q}}\\E)";
-                Pattern rg = Pattern.compile(placeholderPattern);
-                java.util.regex.Matcher m = rg.matcher(stringPattern);
-                while (m.find()) {
-                    method = m.group();
-                    method = method.replaceAll("\\{", "").replaceAll("\\}", "");
-                    method = "get" + method.substring(0, 1).toUpperCase() + method.substring(1);
-                    Method getter = ctxClass.getDeclaredMethod(method);
-                    String p = (String) getter.invoke(context);
-                    stringPattern = stringPattern.replaceAll(Pattern.quote(m.group()), p);
-                }
-                return stringPattern;
-            } catch (NoSuchMethodException e) {
-                throw new RuntimeException("Method " + method + " not found in context "+ctxClass.getName());
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException("Method " + method + " not found in context "+ctxClass.getName());
-            } catch (java.lang.reflect.InvocationTargetException e) {
-                throw new RuntimeException("Method " + method + " not found in context "+ctxClass.getName());
-            }
-        }
-
         /**
-         * Resolve placeholders (such as {@code sessionId}) against the given instance of
-         * {@link TestListener}
+         * Resolve placeholders (such as {@code sessionId}) against the given instance of {@link TestListener}
          *
          * @return the resolved and compiled {@link Pattern}
          */
@@ -369,6 +657,65 @@ public class TestWebSocketClient implements Closeable {
             throw new UnsupportedOperationException();
         }
 
+        private String resolvePlaceHolders(String stringPattern, Object context) {
+            String method = "";
+            Class<?> ctxClass = context.getClass();
+
+            try {
+                String placeholderPattern = "(\\Q{{\\E[[a-zA-Z0-9]| |\t]+?\\Q}}\\E)";
+                Pattern rg = Pattern.compile(placeholderPattern);
+                java.util.regex.Matcher m = rg.matcher(stringPattern);
+                while (m.find()) {
+                    method = m.group();
+                    method = method.replaceAll("\\{", "").replaceAll("\\}", "");
+                    method = "get" + method.substring(0, 1).toUpperCase() + method.substring(1);
+                    Method getter = ctxClass.getDeclaredMethod(method);
+                    String p = (String) getter.invoke(context);
+                    stringPattern = stringPattern.replaceAll(Pattern.quote(m.group()), p);
+                }
+                return stringPattern;
+            } catch (NoSuchMethodException e) {
+                throw new RuntimeException("Method " + method + " not found in context " + ctxClass.getName());
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException("Method " + method + " not found in context " + ctxClass.getName());
+            } catch (java.lang.reflect.InvocationTargetException e) {
+                throw new RuntimeException("Method " + method + " not found in context " + ctxClass.getName());
+            }
+        }
+
+    }
+
+    public static class PingForeverAnswer implements Answer {
+
+        /** @see org.hawkular.cmdgw.ws.test.TestWebSocketClient.Answer#schedule(java.util.concurrent.ExecutorService, com.squareup.okhttp.ws.WebSocket) */
+        @Override
+        public void schedule(final ExecutorService executor, final WebSocket webSocket) {
+            Runnable r = new Runnable() {
+                private int counter = 0;
+                @Override
+                public void run() {
+                    try {
+                        int ping = counter++;
+                        log.fine("about to sent ping ["+ ping +"]");
+                        try (Buffer b = new Buffer()) {
+                            b.writeUtf8(String.valueOf(ping));
+                            webSocket.sendPing(b);
+                        }
+                        /* ... and repeat */
+                        try {
+                            Thread.sleep(250);
+                            executor.execute(this);
+                        } catch (InterruptedException e) {
+                            log.fine("Interrupted.");
+                        }
+                    } catch (IOException e) {
+                        log.log(Level.FINE, "Could not ping", e);
+                    }
+                }
+            };
+            executor.execute(r);
+        }
+
     }
 
     /**
@@ -392,8 +739,7 @@ public class TestWebSocketClient implements Closeable {
             try (Reader r = new InputStreamReader(new ByteArrayInputStream(bytes), "utf-8")) {
                 int numberOfOpenedObjects = 0;
                 int c;
-                LOOP:
-                while ((c = r.read()) >= 0) {
+                LOOP: while ((c = r.read()) >= 0) {
                     char ch = (char) c;
                     switch (ch) {
                         case '{':
@@ -477,50 +823,54 @@ public class TestWebSocketClient implements Closeable {
     }
 
     /**
-     * An implementation of {@link WebSocketListener} that does matches the {@link ExpectedMessage}s against incoming
+     * An implementation of {@link WebSocketListener} that does matches the {@link ExpectedEvent}s against incoming
      * messages and reports the results.
      */
-    public static class TestListener implements WebSocketListener, Closeable {
+    public static class TestListener implements WebSocketListener {
 
         private boolean closed;
-
         /**
          * Actually a blocing variable rather than a queue. Used to hand over the results to a consumer that runs in
          * another thread.
          */
         private final BlockingQueue<List<MessageReport>> conversationResult;
 
-        private final List<ExpectedMessage> expectedMessages;
+        private final List<ExpectedEvent> expectedEvents;
+
         private int inMessageCounter = 0;
-
         private final List<MessageReport> reports = new ArrayList<>();
-
         private final ExecutorService sendExecutor;
+
         private String sessionId;
         private WebSocket webSocket;
 
-        private TestListener(List<ExpectedMessage> expectedMessages) {
+        private TestListener(List<ExpectedEvent> expectedEvents) {
             super();
-            this.expectedMessages = expectedMessages;
+            this.expectedEvents = expectedEvents;
             this.sendExecutor = Executors.newSingleThreadExecutor();
             /* we will put reports to conversationResult when we get all expected messages */
             this.conversationResult = new ArrayBlockingQueue<>(1);
         }
 
-        @Override
-        public void close() {
+        public void close(ActualEvent actual) {
+            boolean sendClose = !(actual instanceof ActualFailure || actual instanceof ActualClose);
+            log.fine("Closing the websocket");
             closed = true;
-            sendExecutor.submit(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        webSocket.close(1000, "OK");
-                    } catch (IOException e) {
-                        log.warning("Could not close WebSocket");
+            if (sendClose) {
+                sendExecutor.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            log.fine("About to send close");
+                            webSocket.close(1000, "OK");
+                            log.fine("Close sent");
+                        } catch (IOException e) {
+                            log.warning("Could not close WebSocket");
+                        }
                     }
-                }
-            });
-            sendExecutor.shutdown();
+                });
+            }
+            shutDownExecutor();
             /* we are done, we can let the validation thread in */
             try {
                 conversationResult.put(Collections.unmodifiableList(reports));
@@ -541,36 +891,42 @@ public class TestWebSocketClient implements Closeable {
         }
 
         public void onClose(int code, String reason) {
-            log.fine("WebSocket closed");
+            handle(new ActualClose(this, inMessageCounter++, code, reason));
         }
 
         public void onFailure(IOException e, Response response) {
-            log.log(java.util.logging.Level.FINE, "WebSocket failure", e);
-            Assert.fail("Unexpected " + getClass().getName() + ".onFailure()", e);
+            handle(new ActualFailure(this, inMessageCounter++, e, response));
         }
 
-        public void onMessage(BufferedSource payload, PayloadType type) throws IOException {
+        /** @see com.squareup.okhttp.ws.WebSocketListener#onMessage(com.squareup.okhttp.ResponseBody) */
+        @Override
+        public void onMessage(ResponseBody body) throws IOException {
+            handle(new ActualMessage(this, inMessageCounter++, body));
+        }
+
+        /**
+         * @param actual
+         */
+        private void handle(ActualEvent actual) {
+            log.fine("Received message[" + actual.getIndex() + "] from WebSocket: [" + actual + "]");
             if (closed) {
                 throw new IllegalStateException("Received [" + (inMessageCounter + 1) + "]th message when only ["
-                        + expectedMessages.size() + "] messages were expected");
+                        + expectedEvents.size() + "] messages were expected");
             }
-
-            ReusableBuffer message = new ReusableBuffer(payload);
-            log.fine("Received message[" + inMessageCounter + "] [" + type + "] from WebSocket: "
-                    + message.toString() + "]");
-
-            ExpectedMessage expectedEvent = expectedMessages.get(inMessageCounter);
-            MessageReport report = expectedEvent.assertMatch(this, inMessageCounter, message, type);
+            ExpectedEvent expected = expectedEvents.get(actual.getIndex());
+            MessageReport report = expected.match(actual);
             log.fine(report.toString());
-            inMessageCounter++;
-            if (expectedEvent.hasAnswer()) {
-                this.send(expectedEvent.getTextAnswer(), expectedEvent.getBinaryAnswer());
-            }
-
             reports.add(report);
-            if (inMessageCounter == expectedMessages.size()) {
+
+            if (report.passed()) {
+                expected.scheduleAnswer(actual, sendExecutor, webSocket);
+            } else {
+                close(actual);
+            }
+            if (inMessageCounter == expectedEvents.size()) {
                 /* this was the last expected message */
-                close();
+                log.fine("Message[" + actual.getIndex() + "] was the last expected message, sending close.");
+                close(actual);
             }
         }
 
@@ -580,32 +936,22 @@ public class TestWebSocketClient implements Closeable {
         }
 
         public void onPong(Buffer payload) {
+            log.fine("Got pong ["+ payload.readUtf8() +"]");
         }
 
-        public void send(final String text, final URL dataUrl) {
-            sendExecutor.execute(new Runnable() {
-                @Override
-                public void run() {
-                    try (Buffer b1 = new Buffer()) {
-                        if (text != null) {
-                            log.fine("Sending over WebSocket: " + text);
-                            b1.writeUtf8(text);
-                        }
-                        if (dataUrl != null) {
-                            try (InputStream in = dataUrl.openStream()) {
-                                int b;
-                                while ((b = in.read()) != -1) {
-                                    b1.writeByte(b);
-                                    // System.out.println("Writing binary data");
-                                }
-                            }
-                        }
-                        webSocket.sendMessage(dataUrl == null ? PayloadType.TEXT : PayloadType.BINARY, b1);
-                    } catch (IOException e) {
-                        throw new RuntimeException("Unable to send message", e);
-                    }
-                }
-            });
+
+        /**
+         *
+         */
+        private void shutDownExecutor() {
+            log.fine("Shutting down the executor");
+            try {
+                sendExecutor.shutdown();
+                sendExecutor.awaitTermination(5, TimeUnit.SECONDS);
+            } catch (InterruptedException e1) {
+                e1.printStackTrace();
+            }
+            log.fine("Executor shut down");
         }
 
         /**
@@ -619,13 +965,14 @@ public class TestWebSocketClient implements Closeable {
             List<Throwable> errors = new ArrayList<>();
 
             if (finalReports != null) {
-                for (MessageReport report : finalReports) {
-                    if (!report.passed()) {
-                        errors.add(report.getThrowable());
-                    }
-                }
+                errors = finalReports.stream().filter(r -> !r.passed()).map(MessageReport::getThrowable).collect(Collectors.toList());
             } else {
-                errors.add(new Throwable("Could not get conversation results after " + timeout + "ms"));
+                log.fine("Timeout: Shutting down the executor");
+                shutDownExecutor();
+                this.closed = true;
+                List<MessageReport> reps = new ArrayList<>(this.reports);
+                errors.add(new Throwable("Could not get conversation results after " + timeout + "ms. Collected ["
+                        + reps.size() + "] reports: [" + reps + "], expected ["+ expectedEvents.size() +"] events"));
             }
 
             switch (errors.size()) {
@@ -690,13 +1037,17 @@ public class TestWebSocketClient implements Closeable {
      */
     public static class ZipWithOneEntryMatcher extends TypeSafeMatcher<InputStream> {
 
-        /** @see org.hamcrest.SelfDescribing#describeTo(org.hamcrest.Description) */
+        /**
+         * @see org.hamcrest.SelfDescribing#describeTo(org.hamcrest.Description)
+         */
         @Override
         public void describeTo(Description description) {
             description.appendText("expected ZIP stream");
         }
 
-        /** @see org.hamcrest.TypeSafeMatcher#matchesSafely(java.lang.Object) */
+        /**
+         * @see org.hamcrest.TypeSafeMatcher#matchesSafely(java.lang.Object)
+         */
         @Override
         protected boolean matchesSafely(InputStream in) {
 
@@ -744,7 +1095,12 @@ public class TestWebSocketClient implements Closeable {
      */
     @Override
     public void close() throws IOException {
-        client.getDispatcher().getExecutorService().shutdown();
+        ExecutorService executor = client.getDispatcher().getExecutorService();
+        executor.shutdown();
+        try {
+            executor.awaitTermination(5, TimeUnit.SECONDS);
+        } catch (InterruptedException ignored) {
+        }
     }
 
     /**

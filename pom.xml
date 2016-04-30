@@ -66,8 +66,9 @@
   <properties>
 
     <!-- Dependency versions in alphabetic order -->
-    <version.org.hawkular.accounts>2.0.26.Final</version.org.hawkular.accounts>
-    <version.org.hawkular.commons>0.6.1.Final</version.org.hawkular.commons>
+    <version.com.squareup.okhttp>2.7.5</version.com.squareup.okhttp>
+
+    <version.org.hawkular.commons>0.6.2.Final-SRC-revision-089d9fb9523df25a4009a460d756feac7e5ef85f</version.org.hawkular.commons>
 
     <!-- Plugin versions in alphabetic order -->
     <plugin.version.org.jsonschema2pojo>0.4.14</plugin.version.org.jsonschema2pojo>
@@ -81,12 +82,6 @@
         <groupId>javax</groupId>
         <artifactId>javaee-api</artifactId>
         <version>7.0</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.hawkular.accounts</groupId>
-        <artifactId>hawkular-accounts-websocket-api</artifactId>
-        <version>${version.org.hawkular.accounts}</version>
       </dependency>
 
       <dependency>

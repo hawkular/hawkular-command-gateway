@@ -16,24 +16,17 @@
  */
 package org.hawkular.cmdgw.command.ws.server;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 
 import javax.inject.Inject;
-import javax.websocket.CloseReason;
-import javax.websocket.CloseReason.CloseCodes;
 import javax.websocket.OnMessage;
 import javax.websocket.Session;
 
-import org.hawkular.accounts.websocket.Authenticator;
-import org.hawkular.accounts.websocket.WebsocketAuthenticationException;
 import org.hawkular.bus.common.BasicMessage;
 import org.hawkular.bus.common.BasicMessageWithExtraData;
 import org.hawkular.cmdgw.NoCommandForMessageException;
 import org.hawkular.cmdgw.api.ApiDeserializer;
-import org.hawkular.cmdgw.api.AuthMessage;
-import org.hawkular.cmdgw.api.Authentication;
 import org.hawkular.cmdgw.api.GenericErrorResponse;
 import org.hawkular.cmdgw.api.GenericErrorResponseBuilder;
 import org.hawkular.cmdgw.api.UiSessionOrigin;
@@ -53,9 +46,6 @@ import org.hawkular.cmdgw.log.MsgLogger;
  */
 public abstract class AbstractGatewayWebSocket {
     private static final MsgLogger log = GatewayLoggers.getLogger(AbstractGatewayWebSocket.class);
-
-    @Inject
-    protected Authenticator authenticator;
 
     @Inject
     protected WsCommandContextFactory commandContextFactory;
@@ -88,63 +78,8 @@ public abstract class AbstractGatewayWebSocket {
         this.endpoint = endpoint;
     }
 
-    /**
-     * This makes sure the message is properly authenticated. If the message is not authenticated
-     * with the appropriate credentials, an exception is thrown. Otherwise, this returns silently,
-     * allowing the caller to continue.
-     *
-     * @param basicMessage the message (including its authentication credentials) to be authenticated
-     * @param session the session that sent the message
-     * @throws WebsocketAuthenticationException if the authentication check fails
-     */
-    protected void authenticate(BasicMessage basicMessage, Session session) throws WebsocketAuthenticationException {
-        // if no authentication information is passed in the message, we will still ask Hawkular Accounts
-        // to authenticate our session. This is to ensure any previous credentials/token that was authenticated
-        // in the past is still valid now.
-        log.tracef("About to authenticate message [%s] from WebSocket session [%s] of [%s]",
-                basicMessage.getClass().getName(), session.getId(), endpoint);
-
-        String username = null;
-        String password = null;
-        String token = null;
-        String persona = null;
-
-        if (basicMessage instanceof AuthMessage) {
-            AuthMessage authMessage = (AuthMessage) basicMessage;
-            Authentication auth = authMessage.getAuthentication();
-            if (auth != null) {
-                username = auth.getUsername();
-                password = auth.getPassword();
-                token = auth.getToken();
-                persona = auth.getPersona();
-
-                // make sure we clear the auth message - if we forward it we don't want the creds going along with it
-                authMessage.setAuthentication(null);
-            }
-        }
-
-        try {
-            // note that if both username and token are provided, we authenticate using the token
-            boolean hasToken = (token != null && !token.isEmpty());
-            if (hasToken) {
-                log.tracef("authenticating token [%s/%s], session=[%s]", token, persona, session.getId());
-                authenticator.authenticateWithToken(token, persona, session);
-            } else {
-                log.tracef("authenticating user [%s/%s/%s], session=[%s]", username, password, persona,
-                        session.getId());
-                authenticator.authenticateWithCredentials(username, password, persona, session);
-            }
-        } catch (WebsocketAuthenticationException wae) {
-            throw wae;
-        } catch (Exception e) {
-            throw new WebsocketAuthenticationException("Unauthorized!", e);
-        }
-
-        return; // authentication successful
-    }
-
     protected void handleRequest(Session session, BasicMessageWithExtraData<BasicMessage> requestWithBinary)
-            throws WebsocketAuthenticationException, NoCommandForMessageException, Exception {
+            throws NoCommandForMessageException, Exception {
         BasicMessage request = requestWithBinary.getBasicMessage();
 
         if (request instanceof UiSessionOrigin) {
@@ -152,9 +87,6 @@ public abstract class AbstractGatewayWebSocket {
             log.tracef("[%s] is an instance of [%s]", request.getClass().getName(), UiSessionOrigin.class.getName());
             ((UiSessionOrigin) request).setSenderSessionId(session.getId());
         }
-
-        // make sure the user is authenticated
-        authenticate(request, session);
 
         Class<BasicMessage> requestClass = (Class<BasicMessage>) request.getClass();
         Collection<WsCommand<BasicMessage>> commands = wsCommands.getCommands(requestClass);
@@ -185,12 +117,6 @@ public abstract class AbstractGatewayWebSocket {
 
             handleRequest(session, reqWithData);
 
-        } catch (WebsocketAuthenticationException wae) {
-            try {
-                session.close(new CloseReason(CloseCodes.VIOLATED_POLICY, wae.getLocalizedMessage()));
-            } catch (IOException ioe) {
-                log.errorCloseSessionAfterAuthFailure(ioe, session.getId(), endpoint, requestClassName);
-            }
         } catch (Throwable t) {
             log.errorWsCommandExecutionFailure(requestClassName, session.getId(), endpoint, t);
             String errorMessage = "BusCommand failed [" + requestClassName + "]";
@@ -216,12 +142,6 @@ public abstract class AbstractGatewayWebSocket {
 
             handleRequest(session, request);
 
-        } catch (WebsocketAuthenticationException wae) {
-            try {
-                session.close(new CloseReason(CloseCodes.VIOLATED_POLICY, wae.getLocalizedMessage()));
-            } catch (IOException ioe) {
-                log.errorCloseSessionAfterAuthFailure(ioe, session.getId(), endpoint, requestClassName);
-            }
         } catch (Throwable t) {
             log.errorWsCommandExecutionFailure(requestClassName, session.getId(), endpoint, t);
             String errorMessage = "Failed to process message [" + requestClassName + "]";

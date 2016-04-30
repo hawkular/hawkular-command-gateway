@@ -16,7 +16,10 @@
  */
 package org.hawkular.cmdgw.ws.test;
 
+import org.hawkular.cmdgw.ws.test.TestWebSocketClient.ExpectedEvent.ExpectedFailure;
 import org.testng.annotations.Test;
+
+import com.squareup.okhttp.Credentials;
 
 /**
  * @author <a href="https://github.com/ppalaga">Peter Palaga</a>
@@ -25,18 +28,59 @@ import org.testng.annotations.Test;
 public class EchoCommandITest extends AbstractCommandITest {
     public static final String GROUP = "EchoCommandITest";
 
-    @Test(groups = {GROUP})
+    private static final String echoRequestTemplate = "EchoRequest={\"authentication\": " + authentication
+            + ", \"echoMessage\": \"%s\"}";
+    private static final String echoResponseTemplate = "EchoResponse={\"reply\":\"ECHO [%s]\"}";
+
+    /**
+     * Tests the simplest echo request-response exchange.
+     *
+     * @throws Throwable
+     */
+    @Test(groups = { GROUP })
     public void testEcho() throws Throwable {
 
-        String req = "EchoRequest={\"authentication\": " + authentication
-                + ", \"echoMessage\": \"Yodel Ay EEE Oooo\"}";
-        String response = "EchoResponse={\"reply\":\"ECHO [Yodel Ay EEE Oooo]\"}";
-       try (TestWebSocketClient testClient = TestWebSocketClient.builder()
-                .url(baseGwUri + "/ui/ws")
-                .expectWelcome(req)
-                .expectText(response)
+        try (TestWebSocketClient testClient = TestWebSocketClient.builder()
+                .url(baseGwUri + "/ui/ws") //
+                .expectWelcome(String.format(echoRequestTemplate, "Yodel Ay EEE Oooo")) //
+                .expectText(String.format(echoResponseTemplate, "Yodel Ay EEE Oooo")) //
                 .build()) {
             testClient.validate(10000);
         }
     }
+
+    @Test(groups = { GROUP })
+    public void testWithoutAuth() throws Throwable {
+
+        try (TestWebSocketClient testClient = TestWebSocketClient.builder()
+                .url(baseGwUri + "/ui/ws") //
+                .authentication(null) //
+                .expectMessage(ExpectedFailure.UNAUTHORIZED) //
+                .build()) {
+            testClient.validate(10000);
+        }
+    }
+
+    @Test(groups = { GROUP })
+    public void testBadPassword() throws Throwable {
+        try (TestWebSocketClient testClient = TestWebSocketClient.builder()
+                .url(baseGwUri + "/ui/ws") //
+                .authentication(Credentials.basic(testUser, "bad password")) //
+                .expectMessage(ExpectedFailure.UNAUTHORIZED) //
+                .build()) {
+            testClient.validate(10000);
+        }
+    }
+
+    @Test(groups = { GROUP })
+    public void testBadUserAndPassword() throws Throwable {
+        try (TestWebSocketClient testClient = TestWebSocketClient.builder()
+                .url(baseGwUri + "/ui/ws") //
+                .authentication(Credentials.basic("baduser", "bad password")) //
+                .expectMessage(ExpectedFailure.UNAUTHORIZED) //
+                .build()) {
+            testClient.validate(10000);
+        }
+    }
+
 }
