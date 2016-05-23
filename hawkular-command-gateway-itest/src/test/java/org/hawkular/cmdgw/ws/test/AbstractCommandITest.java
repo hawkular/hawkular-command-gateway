@@ -17,6 +17,8 @@
 
 package org.hawkular.cmdgw.ws.test;
 
+import com.squareup.okhttp.Credentials;
+
 public abstract class AbstractCommandITest {
 
     protected static final String authentication;
@@ -24,6 +26,7 @@ public abstract class AbstractCommandITest {
     protected static final String host;
     protected static final String testPasword = "password";
     protected static final String testUser = "jdoe";
+    public static final String authHeader = Credentials.basic(testUser, testPasword);
 
     static {
         String h = System.getProperty("hawkular.bind.address", "localhost");
