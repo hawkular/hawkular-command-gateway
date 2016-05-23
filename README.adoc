@@ -1,3 +1,7 @@
+= This git repository is obsolete
+
+The sources from this git repository were moved to Hawkular Commons https://github.com/hawkular/hawkular-commons/pull/63 .
+
 = hawkular-command-gateway
 :source-language: java
 
